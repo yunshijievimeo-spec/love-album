@@ -500,8 +500,16 @@ function startEditing(memory) {
 
 async function updateMemory(id, memory) {
   if (hasSupabase) {
-    const { error } = await supabaseClient.from(config.tableName).update(memory).eq("id", id);
+    const { data, error } = await supabaseClient
+      .from(config.tableName)
+      .update(memory)
+      .eq("id", id)
+      .select("id, title, note, location, memory_date")
+      .maybeSingle();
     if (error) throw error;
+    if (!data) {
+      throw new Error("Memory update did not return a row. Check Supabase update policy.");
+    }
     return;
   }
 
