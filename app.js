@@ -1,8 +1,10 @@
 const config = window.LOVE_ALBUM_CONFIG || {};
 const sessionKey = "love-album-unlocked";
 const localMemoriesKey = "love-album-demo-memories";
+const localMessagesKey = "love-album-demo-messages";
 const storageLimitBytes = 1024 * 1024 * 1024;
 const fallbackAveragePhotoBytes = 3 * 1024 * 1024;
+const messageTableName = config.messageTableName || "messages";
 
 const elements = {
   lockScreen: document.querySelector("#lockScreen"),
@@ -35,7 +37,14 @@ const elements = {
   emptyTemplate: document.querySelector("#emptyTemplate"),
   photoLightbox: document.querySelector("#photoLightbox"),
   lightboxClose: document.querySelector("#lightboxClose"),
-  lightboxImage: document.querySelector("#lightboxImage")
+  lightboxImage: document.querySelector("#lightboxImage"),
+  messageForm: document.querySelector("#messageForm"),
+  messageAuthorInput: document.querySelector("#messageAuthorInput"),
+  messageDateInput: document.querySelector("#messageDateInput"),
+  messageTextInput: document.querySelector("#messageTextInput"),
+  messageStatus: document.querySelector("#messageStatus"),
+  submitMessageButton: document.querySelector("#submitMessageButton"),
+  messageTableBody: document.querySelector("#messageTableBody")
 };
 
 const metDate = new Date(2025, 11, 25);
@@ -50,11 +59,14 @@ const supabaseClient = hasSupabase
   : null;
 
 elements.dateInput.valueAsDate = new Date();
+if (elements.messageDateInput) elements.messageDateInput.valueAsDate = new Date();
+
 updateDaysTogether();
 restoreSession();
 
 elements.loginForm.addEventListener("submit", (event) => {
   event.preventDefault();
+
   if (elements.sitePassword.value === config.sitePassword) {
     elements.sitePassword.value = "";
     elements.loginError.textContent = "";
@@ -73,23 +85,27 @@ elements.logoutButton.addEventListener("click", () => {
   elements.lockScreen.hidden = false;
 });
 
-elements.refreshButton.addEventListener("click", loadMemories);
+elements.refreshButton.addEventListener("click", async () => {
+  await Promise.all([loadMemories(), loadMessages()]);
+});
 elements.cancelEditButton.addEventListener("click", resetMemoryForm);
 elements.lightboxClose.addEventListener("click", closeLightbox);
+
+if (elements.messageForm) {
+  elements.messageForm.addEventListener("submit", handleMessageSubmit);
+}
+
 elements.photoLightbox.addEventListener("click", (event) => {
   if (event.target === elements.photoLightbox) closeLightbox();
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !elements.photoLightbox.hidden) {
-    closeLightbox();
-  }
+  if (event.key === "Escape" && !elements.photoLightbox.hidden) closeLightbox();
 });
 
 elements.photoInput.addEventListener("change", () => {
   const file = elements.photoInput.files?.[0];
   if (!file) return;
-
   elements.previewImage.src = URL.createObjectURL(file);
   elements.previewImage.hidden = false;
 });
@@ -120,14 +136,7 @@ elements.memoryForm.addEventListener("submit", async (event) => {
     }
 
     resetMemoryForm();
-    setSaving(
-      false,
-      editingId
-        ? "修改好了。"
-        : hasSupabase
-          ? "保存好了。"
-          : "已保存到本机演示数据。接入 Supabase 后可云端保存。"
-    );
+    setSaving(false, editingId ? "修改好了。" : "保存好了。");
     await loadMemories();
   } catch (error) {
     console.error(error);
@@ -138,19 +147,20 @@ elements.memoryForm.addEventListener("submit", async (event) => {
 async function unlock() {
   elements.lockScreen.hidden = true;
   elements.albumApp.hidden = false;
-  await loadMemories();
+  await Promise.all([loadMemories(), loadMessages()]);
 }
 
 function restoreSession() {
-  if (sessionStorage.getItem(sessionKey) === "true") {
-    unlock();
-  }
+  if (sessionStorage.getItem(sessionKey) === "true") unlock();
 }
 
 function setSaving(isSaving, message) {
-  const button = elements.submitMemoryButton;
-  button.disabled = isSaving;
-  button.textContent = isSaving ? "保存中" : elements.editingIdInput.value ? "保存修改" : "保存这一刻";
+  elements.submitMemoryButton.disabled = isSaving;
+  elements.submitMemoryButton.textContent = isSaving
+    ? "保存中..."
+    : elements.editingIdInput.value
+      ? "保存修改"
+      : "保存这一刻";
   elements.saveStatus.textContent = message;
 }
 
@@ -162,9 +172,15 @@ function resetMemoryForm() {
   elements.previewImage.hidden = true;
   elements.previewImage.removeAttribute("src");
   elements.uploadTitle.textContent = "上传一张照片";
-  elements.uploadHint.textContent = "手机拍的照片也可以直接选";
+  elements.uploadHint.textContent = "手机拍的照片也可以直接上传";
   elements.cancelEditButton.hidden = true;
   elements.submitMemoryButton.textContent = "保存这一刻";
+}
+
+function resetMessageForm() {
+  if (!elements.messageForm) return;
+  elements.messageForm.reset();
+  elements.messageDateInput.valueAsDate = new Date();
 }
 
 function updateDaysTogether() {
@@ -207,7 +223,7 @@ async function saveToLocalDemo(file, memory) {
     photo_path: "",
     ...memory
   });
-  localStorage.setItem(localMemoriesKey, JSON.stringify(memories.slice(0, 12)));
+  localStorage.setItem(localMemoriesKey, JSON.stringify(memories.slice(0, 24)));
 }
 
 async function loadMemories() {
@@ -225,6 +241,7 @@ async function loadMemories() {
       elements.memoryGrid.append(createNotice("读取失败", "请检查 Supabase 表、存储桶和权限配置。"));
       return;
     }
+
     memories = data || [];
   } else {
     memories = readLocalMemories();
@@ -294,6 +311,100 @@ function createMemoryCard(memory) {
   return article;
 }
 
+async function handleMessageSubmit(event) {
+  event.preventDefault();
+  setMessageSaving(true, "正在写入留言...");
+
+  const message = {
+    author: elements.messageAuthorInput.value.trim(),
+    message_date: elements.messageDateInput.value,
+    content: elements.messageTextInput.value.trim()
+  };
+
+  try {
+    if (hasSupabase) {
+      await saveMessageToSupabase(message);
+    } else {
+      saveMessageToLocal(message);
+    }
+
+    resetMessageForm();
+    setMessageSaving(false, "留言写好了。");
+    await loadMessages();
+  } catch (error) {
+    console.error(error);
+    setMessageSaving(false, "留言保存失败，先检查留言表配置。");
+  }
+}
+
+function setMessageSaving(isSaving, message) {
+  if (!elements.submitMessageButton) return;
+  elements.submitMessageButton.disabled = isSaving;
+  elements.submitMessageButton.textContent = isSaving ? "正在写入..." : "写下这条留言";
+  elements.messageStatus.textContent = message;
+}
+
+async function saveMessageToSupabase(message) {
+  const { error } = await supabaseClient.from(messageTableName).insert(message);
+  if (error) throw error;
+}
+
+function saveMessageToLocal(message) {
+  const messages = readLocalMessages();
+  messages.unshift({
+    id: crypto.randomUUID(),
+    created_at: new Date().toISOString(),
+    ...message
+  });
+  localStorage.setItem(localMessagesKey, JSON.stringify(messages.slice(0, 50)));
+}
+
+async function loadMessages() {
+  if (!elements.messageTableBody) return;
+  elements.messageTableBody.innerHTML = "";
+
+  let messages = [];
+  if (hasSupabase) {
+    const { data, error } = await supabaseClient
+      .from(messageTableName)
+      .select("*")
+      .order("message_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      renderMessageRow("今天", "系统提示", "留言云端表还没建好，先支持本机留言。");
+      return;
+    }
+
+    messages = data || [];
+  } else {
+    messages = readLocalMessages();
+  }
+
+  if (!messages.length) {
+    renderMessageRow("今天", "留言条", "还没有留言，写下第一句吧。");
+    return;
+  }
+
+  messages.forEach((message) => {
+    renderMessageRow(formatDate(message.message_date), message.author || "", message.content || "");
+  });
+}
+
+function renderMessageRow(date, author, content) {
+  const row = document.createElement("tr");
+  const dateCell = document.createElement("td");
+  const authorCell = document.createElement("td");
+  const contentCell = document.createElement("td");
+
+  dateCell.textContent = date;
+  authorCell.textContent = author;
+  contentCell.textContent = content;
+
+  row.append(dateCell, authorCell, contentCell);
+  elements.messageTableBody.append(row);
+}
+
 function openLightbox(src, alt) {
   elements.lightboxImage.src = src;
   elements.lightboxImage.alt = alt || "照片大图";
@@ -319,7 +430,7 @@ function startEditing(memory) {
   elements.previewImage.src = memory.photo_url;
   elements.previewImage.hidden = false;
   elements.uploadTitle.textContent = "正在修改这条记录";
-  elements.uploadHint.textContent = "照片保留不变，只修改文字信息";
+  elements.uploadHint.textContent = "照片保持不变，只修改文字信息";
   elements.cancelEditButton.hidden = false;
   elements.submitMemoryButton.textContent = "保存修改";
   elements.saveStatus.textContent = "";
@@ -366,9 +477,7 @@ async function deleteMemory(memory) {
 function updateStorageStats(memories) {
   const usedBytes = memories.reduce((total, memory) => total + Number(memory.file_size || 0), 0);
   const countedMemories = memories.filter((memory) => Number(memory.file_size || 0) > 0);
-  const averageBytes = countedMemories.length
-    ? usedBytes / countedMemories.length
-    : fallbackAveragePhotoBytes;
+  const averageBytes = countedMemories.length ? usedBytes / countedMemories.length : fallbackAveragePhotoBytes;
   const remainingBytes = Math.max(0, storageLimitBytes - usedBytes);
   const percent = Math.min(100, (usedBytes / storageLimitBytes) * 100);
   const remainingPhotos = Math.floor(remainingBytes / averageBytes);
@@ -413,18 +522,9 @@ function formatDateValue(date) {
 }
 
 function formatBytes(bytes) {
-  if (bytes >= 1024 * 1024 * 1024) {
-    return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
-  }
-
-  if (bytes >= 1024 * 1024) {
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  }
-
-  if (bytes >= 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-
+  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${bytes} B`;
 }
 
@@ -440,6 +540,14 @@ function fileToDataUrl(file) {
 function readLocalMemories() {
   try {
     return JSON.parse(localStorage.getItem(localMemoriesKey) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function readLocalMessages() {
+  try {
+    return JSON.parse(localStorage.getItem(localMessagesKey) || "[]");
   } catch {
     return [];
   }

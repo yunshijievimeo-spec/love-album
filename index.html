@@ -70,7 +70,7 @@
               <label for="photoInput">
                 <span class="upload-icon">+</span>
                 <strong id="uploadTitle">上传一张照片</strong>
-                <small id="uploadHint">手机拍的照片也可以直接选</small>
+                <small id="uploadHint">手机拍的照片也可以直接上传</small>
               </label>
               <img id="previewImage" alt="" hidden />
             </div>
@@ -113,6 +113,54 @@
             <span id="storageMeter"></span>
           </div>
           <p id="storageSummary">剩余约 1 GB，预计还能上传很多张照片。</p>
+        </section>
+
+        <section class="message-board" aria-label="留言条">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Love Notes</p>
+              <h2>留言条</h2>
+              <p>记录一句今天想说的话，也可以记下一个小小的误会和和好。</p>
+            </div>
+          </div>
+
+          <form id="messageForm" class="message-form">
+            <label>
+              谁写的
+              <input id="messageAuthorInput" type="text" maxlength="20" placeholder="比如：浩浩 / 秀琴" required />
+            </label>
+            <label>
+              日期
+              <input id="messageDateInput" type="date" required />
+            </label>
+            <label class="wide">
+              留言内容
+              <textarea
+                id="messageTextInput"
+                rows="3"
+                maxlength="160"
+                placeholder="比如：今天我晚回了你一个小时消息，对不起。"
+                required
+              ></textarea>
+            </label>
+            <div class="message-form-actions">
+              <p id="messageStatus" role="status"></p>
+              <button id="submitMessageButton" type="submit">写下这条留言</button>
+            </div>
+          </form>
+
+          <div class="message-table-wrap">
+            <table class="message-table">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>谁写的</th>
+                  <th>留言内容</th>
+                </tr>
+              </thead>
+              <tbody id="messageTableBody"></tbody>
+            </table>
+          </div>
         </section>
 
         <section class="toolbar">
