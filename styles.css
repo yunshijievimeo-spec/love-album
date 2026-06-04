@@ -522,6 +522,7 @@ textarea:focus,
   width: 100%;
   border-collapse: collapse;
   min-width: 620px;
+  border: 1px solid rgba(83, 55, 44, 0.16);
 }
 
 .message-table th,
@@ -529,7 +530,8 @@ textarea:focus,
   padding: 0.9rem 1rem;
   text-align: left;
   vertical-align: top;
-  border-bottom: 1px solid rgba(83, 55, 44, 0.08);
+  border-right: 1px solid rgba(83, 55, 44, 0.14);
+  border-bottom: 1px solid rgba(83, 55, 44, 0.14);
 }
 
 .message-table th {
@@ -537,12 +539,22 @@ textarea:focus,
   font-size: 0.92rem;
   font-weight: 700;
   background: rgba(255, 245, 246, 0.9);
+  border-bottom: 1px solid rgba(83, 55, 44, 0.18);
 }
 
 .message-table td {
   color: #5d4a42;
   line-height: 1.75;
   white-space: pre-wrap;
+}
+
+.message-table th:last-child,
+.message-table td:last-child {
+  border-right: 0;
+}
+
+.message-table tbody tr:nth-child(even) td {
+  background: rgba(255, 251, 252, 0.82);
 }
 
 .message-table tr:last-child td {
