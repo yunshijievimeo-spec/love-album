@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我和秀琴的旅行日记</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=ZCOOL+XiaoWei&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="lockScreen" class="lock-screen">
+        <div class="lock-photo" aria-hidden="true">
+          <div class="polaroid p1">
+            <span></span>
+            <small>一起出发</small>
+          </div>
+          <div class="polaroid p2">
+            <span></span>
+            <small>慢慢收藏</small>
+          </div>
+        </div>
+
+        <div class="lock-panel">
+          <p class="eyebrow">Private Album</p>
+          <h1>我和秀琴的旅行日记</h1>
+          <p class="intro">把出去玩的照片、当天的小心情和想说的话，都轻轻放在这里。</p>
+          <form id="loginForm" class="password-form">
+            <label for="sitePassword">共同密码</label>
+            <div class="password-row">
+              <input id="sitePassword" type="password" autocomplete="current-password" placeholder="输入你们的共同密码" />
+              <button type="submit">进入</button>
+            </div>
+            <p id="loginError" class="form-error" role="alert"></p>
+          </form>
+        </div>
+      </section>
+
+      <section id="albumApp" class="album-app" hidden>
+        <header class="hero">
+          <div>
+            <p class="eyebrow">Love Journal</p>
+            <h1>我和秀琴的旅行日记</h1>
+            <p>一张照片，一段文字，慢慢攒成你们自己的小宇宙。</p>
+          </div>
+          <button id="logoutButton" class="ghost-button" type="button">锁定</button>
+        </header>
+
+        <section class="composer" aria-label="新增旅行记录">
+          <form id="memoryForm">
+            <div class="upload-box">
+              <input id="photoInput" name="photo" type="file" accept="image/*" required />
+              <label for="photoInput">
+                <span class="upload-icon">+</span>
+                <strong>上传一张照片</strong>
+                <small>手机拍的照片也可以直接选</small>
+              </label>
+              <img id="previewImage" alt="" hidden />
+            </div>
+
+            <div class="form-grid">
+              <label>
+                标题
+                <input id="titleInput" name="title" type="text" maxlength="40" placeholder="比如：海边的傍晚" required />
+              </label>
+              <label>
+                日期
+                <input id="dateInput" name="memory_date" type="date" required />
+              </label>
+              <label>
+                地点
+                <input id="locationInput" name="location" type="text" maxlength="40" placeholder="去了哪里" />
+              </label>
+              <label class="wide">
+                文字记录
+                <textarea id="noteInput" name="note" rows="4" maxlength="240" placeholder="今天发生了什么，想对秀琴说什么..." required></textarea>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <p id="saveStatus" role="status"></p>
+              <button type="submit">保存这一刻</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="toolbar">
+          <div>
+            <span id="memoryCount">0</span>
+            <small>条回忆</small>
+          </div>
+          <button id="refreshButton" class="ghost-button" type="button">刷新</button>
+        </section>
+
+        <section id="memoryGrid" class="memory-grid" aria-live="polite"></section>
+
+        <template id="emptyTemplate">
+          <article class="empty-state">
+            <h2>还没有记录</h2>
+            <p>先上传第一张照片吧。以后每次打开这里，都会多一点你们走过的路。</p>
+          </article>
+        </template>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="./config.example.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
