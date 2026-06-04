@@ -197,6 +197,44 @@ textarea:focus {
   padding: 28px 0 70px;
 }
 
+.love-counter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0.25rem 0 1.1rem;
+  padding: 0.78rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 8px;
+  color: var(--muted);
+  background: rgba(255, 253, 248, 0.76);
+  box-shadow: 0 14px 34px rgba(66, 38, 31, 0.1);
+  backdrop-filter: blur(16px);
+}
+
+.love-counter strong {
+  color: var(--rose-dark);
+  font-weight: 700;
+}
+
+.love-counter em {
+  font-style: normal;
+  font-size: 1.35rem;
+}
+
+.heart {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--rose);
+  box-shadow: 0 8px 18px rgba(207, 111, 130, 0.26);
+}
+
 .hero {
   display: flex;
   justify-content: space-between;

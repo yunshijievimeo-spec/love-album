@@ -20,8 +20,11 @@ const elements = {
   refreshButton: document.querySelector("#refreshButton"),
   memoryGrid: document.querySelector("#memoryGrid"),
   memoryCount: document.querySelector("#memoryCount"),
+  daysTogether: document.querySelector("#daysTogether"),
   emptyTemplate: document.querySelector("#emptyTemplate")
 };
+
+const metDate = new Date(2025, 11, 25);
 
 const hasSupabase =
   Boolean(config.supabaseUrl) &&
@@ -33,6 +36,7 @@ const supabaseClient = hasSupabase
   : null;
 
 elements.dateInput.valueAsDate = new Date();
+updateDaysTogether();
 
 elements.loginForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -106,6 +110,15 @@ function setSaving(isSaving, message) {
   button.disabled = isSaving;
   button.textContent = isSaving ? "保存中" : "保存这一刻";
   elements.saveStatus.textContent = message;
+}
+
+function updateDaysTogether() {
+  const today = new Date();
+  const start = new Date(metDate.getFullYear(), metDate.getMonth(), metDate.getDate());
+  const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dayMs = 24 * 60 * 60 * 1000;
+  const days = Math.max(1, Math.floor((current - start) / dayMs) + 1);
+  elements.daysTogether.textContent = days.toString();
 }
 
 async function saveToSupabase(file, memory) {
