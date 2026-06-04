@@ -305,6 +305,20 @@ textarea:focus,
   padding: 22px 0 22px;
 }
 
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.hero-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .hero h1 {
   max-width: 820px;
   margin-bottom: 0.7rem;
@@ -753,6 +767,10 @@ textarea:focus,
 
   .hero {
     display: grid;
+  }
+
+  .hero-actions {
+    justify-content: flex-start;
   }
 
   .form-actions {

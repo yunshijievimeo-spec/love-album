@@ -3,5 +3,10 @@ window.LOVE_ALBUM_CONFIG = {
   supabaseUrl: "https://xdlrxqelqszqldblygma.supabase.co",
   supabaseAnonKey: "sb_publishable_8DTggSrA_sH4bXzBNbFl2A_QcJKHOG-",
   bucketName: "love-photos",
-  tableName: "memories"
+  tableName: "memories",
+  chatMessageTableName: "couple_chat_messages",
+  statusTableName: "couple_status_cards",
+  riddleTableName: "couple_riddles",
+  questionRoundTableName: "couple_question_rounds",
+  drawRoundTableName: "couple_draw_rounds"
 };

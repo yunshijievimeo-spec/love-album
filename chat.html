@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Love Playroom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./chat-styles.css" />
+  </head>
+  <body>
+    <main class="chat-shell">
+      <section class="intro-card">
+        <div class="intro-copy">
+          <p class="eyebrow">Private Space</p>
+          <h1>Love Playroom</h1>
+          <p class="intro-text">
+            A shared little room for chat, random prompts, riddles, and draw-and-guess rounds. Open the same link on both phones and you will see the same cloud data.
+          </p>
+        </div>
+
+        <div class="intro-meta">
+          <div class="mode-card">
+            <span>Current mode</span>
+            <strong id="modeBadge">Checking</strong>
+            <small id="modeHint">Checking cloud connection</small>
+          </div>
+          <div class="intro-actions">
+            <a class="soft-button" href="./index.html">Back To Album</a>
+            <button id="refreshAllButton" class="soft-button ghost" type="button">Refresh Cloud</button>
+            <button id="clearLocalCacheButton" class="soft-button ghost" type="button">Clear Local Cache</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="chat-layout">
+        <aside class="side-panel">
+          <article class="panel-card compact">
+            <p class="panel-kicker">Today</p>
+            <h2>Mood Card</h2>
+            <form id="moodForm" class="stack-form">
+              <label>
+                Who
+                <input id="moodAuthorInput" type="text" maxlength="20" placeholder="Me / Baby" required />
+              </label>
+              <label>
+                Feeling
+                <select id="moodSelect">
+                  <option value="Miss you">Miss you</option>
+                  <option value="Happy">Happy</option>
+                  <option value="Sleepy">Sleepy</option>
+                  <option value="Need a hug">Need a hug</option>
+                  <option value="Want a date">Want a date</option>
+                </select>
+              </label>
+              <label>
+                Short note
+                <textarea id="moodNoteInput" rows="3" maxlength="80" placeholder="Say one small thing"></textarea>
+              </label>
+              <button type="submit">Save Mood</button>
+            </form>
+            <div id="moodCard" class="mood-card"></div>
+          </article>
+
+          <article class="panel-card compact">
+            <div class="inline-head">
+              <div>
+                <p class="panel-kicker">Mini Game</p>
+                <h2>Riddle Card</h2>
+              </div>
+              <span id="riddleCountBadge" class="badge">0</span>
+            </div>
+
+            <form id="riddleForm" class="stack-form">
+              <label>
+                Author
+                <input id="riddleAuthorInput" type="text" maxlength="20" placeholder="Who asks" required />
+              </label>
+              <label>
+                Question
+                <textarea id="riddleQuestionInput" rows="3" maxlength="120" placeholder="Write a sweet riddle" required></textarea>
+              </label>
+              <label>
+                Answer
+                <input id="riddleAnswerInput" type="text" maxlength="40" placeholder="Hidden answer" required />
+              </label>
+              <button type="submit">Post Riddle</button>
+            </form>
+            <div id="riddleList" class="riddle-list"></div>
+          </article>
+
+          <article class="panel-card compact">
+            <div class="inline-head">
+              <div>
+                <p class="panel-kicker">Random Prompt</p>
+                <h2>Question Of The Round</h2>
+              </div>
+              <button id="nextPromptButton" class="tiny-button" type="button">Next Prompt</button>
+            </div>
+
+            <div class="prompt-card">
+              <strong id="promptQuestionText">No prompt yet</strong>
+              <p id="promptHintText">Tap the button to create one cloud-synced question for both of you.</p>
+            </div>
+
+            <form id="promptAnswerForm" class="stack-form">
+              <label>
+                Who answers
+                <input id="promptAuthorInput" type="text" maxlength="20" placeholder="Your name" required />
+              </label>
+              <label>
+                Your answer
+                <textarea id="promptAnswerInput" rows="3" maxlength="200" placeholder="Say what you really feel" required></textarea>
+              </label>
+              <button type="submit">Save Answer</button>
+            </form>
+
+            <div id="promptAnswers" class="answer-list"></div>
+          </article>
+        </aside>
+
+        <section class="main-panel">
+          <article class="panel-card chat-card">
+            <div class="panel-head">
+              <div>
+                <p class="panel-kicker">Chat</p>
+                <h2>Message Stream</h2>
+              </div>
+              <span id="messageCountBadge" class="badge">0</span>
+            </div>
+
+            <div id="chatStream" class="chat-stream" aria-live="polite"></div>
+
+            <form id="chatForm" class="chat-form">
+              <input id="chatAuthorInput" type="text" maxlength="20" placeholder="Who" required />
+              <textarea id="chatTextInput" rows="2" maxlength="200" placeholder="Send a soft little message" required></textarea>
+              <button type="submit">Send</button>
+            </form>
+          </article>
+
+          <article class="panel-card draw-card">
+            <div class="panel-head">
+              <div>
+                <p class="panel-kicker">Draw & Guess</p>
+                <h2>Round Game</h2>
+              </div>
+              <span id="drawRoundBadge" class="badge">Round 0</span>
+            </div>
+
+            <form id="drawRoundForm" class="draw-round-form">
+              <input id="drawRoundAuthorInput" type="text" maxlength="20" placeholder="Who draws" required />
+              <input id="drawRoundPromptInput" type="text" maxlength="30" placeholder="Idiom or phrase" required />
+              <button id="randomDrawPromptButton" class="soft-button ghost" type="button">Random Idiom</button>
+              <button type="submit">Start Next Round</button>
+            </form>
+
+            <div class="draw-round-meta">
+              <div>
+                <span>Drawer</span>
+                <strong id="drawRoundAuthorText">No round yet</strong>
+              </div>
+              <div>
+                <span>Prompt</span>
+                <strong id="drawRoundPromptText">Create the first round</strong>
+                <button id="toggleDrawPromptButton" class="tiny-button ghost" type="button">Show / Hide</button>
+              </div>
+            </div>
+
+            <div class="draw-tools">
+              <input id="brushColorInput" type="color" value="#ff6b81" aria-label="Brush color" />
+              <input id="brushSizeInput" type="range" min="2" max="18" value="6" aria-label="Brush size" />
+              <button id="clearCanvasButton" class="soft-button ghost" type="button">Clear Board</button>
+              <button id="saveCanvasButton" class="soft-button" type="button">Upload Drawing</button>
+            </div>
+
+            <canvas id="drawCanvas" width="960" height="420"></canvas>
+            <p class="draw-hint">
+              The drawing is compressed and stored in the database directly, so it stays much lighter than using a photo bucket.
+            </p>
+
+            <form id="drawGuessForm" class="stack-form draw-guess-form">
+              <label>
+                Who guesses
+                <input id="drawGuessAuthorInput" type="text" maxlength="20" placeholder="Guesser" required />
+              </label>
+              <label>
+                Guess
+                <input id="drawGuessInput" type="text" maxlength="40" placeholder="Your guess" required />
+              </label>
+              <button type="submit">Save Guess</button>
+            </form>
+
+            <div id="drawGuessCard" class="guess-card"></div>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <template id="emptyChatTemplate">
+      <div class="empty-box">
+        <strong>No messages yet</strong>
+        <p>Send the first little message.</p>
+      </div>
+    </template>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="./config.example.js"></script>
+    <script src="./chat-app.js"></script>
+  </body>
+</html>
