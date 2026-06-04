@@ -47,7 +47,7 @@ const elements = {
   messageTableBody: document.querySelector("#messageTableBody")
 };
 
-const metDate = new Date(2025, 11, 25);
+const metDate = new Date(2026, 0, 1);
 
 const hasSupabase =
   Boolean(config.supabaseUrl) &&
