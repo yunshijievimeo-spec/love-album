@@ -17,31 +17,31 @@ const tableNames = {
 };
 
 const promptPool = [
-  { question: "What moment recently made you want to hug me right away?", hint: "A small moment is enough." },
-  { question: "If we suddenly got a free day tomorrow, how would you want to spend it with me?", hint: "Specific answers are cuter." },
-  { question: "What little habit of mine feels the cutest to you?", hint: "Be honest and sweet." },
-  { question: "Which chat made you feel that we really understand each other?", hint: "Pick one real memory." },
-  { question: "If our relationship had one movie line, what would it be?", hint: "Cheesy is allowed." },
-  { question: "What small thing do you most want to unlock with me next?", hint: "Food, dates, travel, anything." },
-  { question: "When do I make you feel especially safe?", hint: "A good place to quietly praise me." },
-  { question: "If you could leave me only one sentence tonight, what would you say?", hint: "One sentence can still be precious." },
-  { question: "What is one thing you wish I understood about you even more?", hint: "A good moment to be serious." },
-  { question: "What tiny ritual do you want us to build together?", hint: "Good night, photos, walks, anything." }
+  { question: "最近哪一个瞬间，让你最想立刻抱抱我？", hint: "小小的一件事也可以。" },
+  { question: "如果明天突然多出一天假期，你最想和我怎么过？", hint: "越具体越可爱。" },
+  { question: "你觉得我哪个小习惯最可爱？", hint: "认真夸，不许敷衍。" },
+  { question: "哪次聊天让你觉得我们真的很懂彼此？", hint: "回忆一个具体时刻。" },
+  { question: "如果给我们的关系配一句电影台词，你会选什么？", hint: "土一点也没关系。" },
+  { question: "你最想和我一起解锁的一件小事是什么？", hint: "吃、玩、旅行都可以。" },
+  { question: "我做什么的时候，会让你觉得特别安心？", hint: "也是一个顺手夸我的机会。" },
+  { question: "如果今晚只能给我留一句话，你最想说什么？", hint: "一句短短的话也很珍贵。" },
+  { question: "你最想让我更懂你的哪一点？", hint: "这题可以认真一点。" },
+  { question: "以后你最想和我养成什么小仪式感？", hint: "晚安、拍照、散步都算。" }
 ];
 
 const drawPromptPool = [
-  "heart to heart",
-  "head over heels",
-  "puppy love",
-  "butterflies",
-  "wild guess",
-  "love at first sight",
-  "cat and mouse",
-  "under the weather",
-  "happy tears",
-  "busy hands",
-  "light bulb",
-  "storm in a teacup"
+  "心有灵犀",
+  "眉飞色舞",
+  "一见钟情",
+  "鸡飞狗跳",
+  "手忙脚乱",
+  "对牛弹琴",
+  "画蛇添足",
+  "守株待兔",
+  "亡羊补牢",
+  "掩耳盗铃",
+  "喜极而泣",
+  "灵机一动"
 ];
 
 const state = {
@@ -139,15 +139,15 @@ function bindEvents() {
 
 function setModeStatus(message) {
   if (state.hasSupabase) {
-    chatElements.modeBadge.textContent = "Cloud Sync";
+    chatElements.modeBadge.textContent = "云端同步";
     chatElements.modeHint.textContent =
-      message || "Open the same deployed link on both devices to share the same data.";
+      message || "两个人打开同一个线上链接，就能看到同一份互动记录。";
     return;
   }
 
-  chatElements.modeBadge.textContent = "Local Demo";
+  chatElements.modeBadge.textContent = "本地演示";
   chatElements.modeHint.textContent =
-    message || "If cloud tables are missing, the page falls back to local browser storage.";
+    message || "如果云端表还没建好，页面会先退回到当前浏览器本地保存。";
 }
 
 async function refreshAll() {
@@ -242,18 +242,18 @@ async function hydrateMood() {
   chatElements.moodCard.innerHTML = "";
 
   if (!mood) {
-    chatElements.moodCard.innerHTML = "<p>No mood card yet. Save one first.</p>";
+    chatElements.moodCard.innerHTML = "<p>还没有心情卡，先写一条吧。</p>";
     return;
   }
 
   const badge = document.createElement("strong");
-  badge.textContent = `${mood.author}: ${mood.feeling}`;
+  badge.textContent = `${mood.author}：${mood.feeling}`;
 
   const note = document.createElement("p");
-  note.textContent = mood.note || "Still thinking about you.";
+  note.textContent = mood.note || "今天也在想你。";
 
   const time = document.createElement("small");
-  time.textContent = `Updated ${formatTime(mood.created_at)}`;
+  time.textContent = `更新于 ${formatTime(mood.created_at)}`;
 
   chatElements.moodCard.append(badge, note, time);
 }
@@ -290,7 +290,7 @@ async function hydrateRiddles() {
   chatElements.riddleCountBadge.textContent = `${riddles.length}`;
 
   if (!riddles.length) {
-    chatElements.riddleList.innerHTML = "<p class='empty-inline'>No riddles yet.</p>";
+    chatElements.riddleList.innerHTML = "<p class='empty-inline'>还没有谜题，先出第一题。</p>";
     return;
   }
 
@@ -299,21 +299,21 @@ async function hydrateRiddles() {
     card.className = "riddle-item";
 
     const title = document.createElement("strong");
-    title.textContent = `${riddle.author} asks`;
+    title.textContent = `${riddle.author} 出题`;
 
     const question = document.createElement("p");
     question.textContent = riddle.question;
 
     const answer = document.createElement("p");
     answer.className = "riddle-answer";
-    answer.textContent = riddle.revealed ? `Answer: ${riddle.answer}` : "Answer hidden";
+    answer.textContent = riddle.revealed ? `答案：${riddle.answer}` : "答案先藏起来啦";
 
     const actions = document.createElement("div");
     actions.className = "riddle-actions";
 
     const revealButton = document.createElement("button");
     revealButton.type = "button";
-    revealButton.textContent = riddle.revealed ? "Hide" : "Reveal";
+    revealButton.textContent = riddle.revealed ? "收起答案" : "看答案";
     revealButton.addEventListener("click", async () => {
       await updateRow(tableNames.riddles, localKeys.riddles, riddle.id, {
         revealed: !riddle.revealed
@@ -324,7 +324,7 @@ async function hydrateRiddles() {
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "ghost";
-    deleteButton.textContent = "Delete";
+    deleteButton.textContent = "删除";
     deleteButton.addEventListener("click", async () => {
       await deleteRow(tableNames.riddles, localKeys.riddles, riddle.id);
       await hydrateRiddles();
@@ -365,15 +365,15 @@ async function hydratePromptRound() {
   state.currentPromptRound = rounds[0] || null;
 
   if (!state.currentPromptRound) {
-    chatElements.promptQuestionText.textContent = "No prompt yet";
-    chatElements.promptHintText.textContent = "Tap Next Prompt to create one.";
-    chatElements.promptAnswers.innerHTML = "<p class='empty-inline'>No answers yet.</p>";
+    chatElements.promptQuestionText.textContent = "还没有问题";
+    chatElements.promptHintText.textContent = "点一下“换一题”，生成你们这轮的新问题。";
+    chatElements.promptAnswers.innerHTML = "<p class='empty-inline'>还没有回答。</p>";
     return;
   }
 
   chatElements.promptQuestionText.textContent = state.currentPromptRound.prompt;
   chatElements.promptHintText.textContent =
-    state.currentPromptRound.hint || "A good prompt for a sweet serious little talk.";
+    state.currentPromptRound.hint || "适合认真聊一会儿，也适合边撒娇边回答。";
 
   renderPromptAnswers(state.currentPromptRound);
 }
@@ -387,7 +387,7 @@ function renderPromptAnswers(round) {
   ].filter((item) => item.author || item.answer);
 
   if (!answers.length) {
-    chatElements.promptAnswers.innerHTML = "<p class='empty-inline'>No answers yet.</p>";
+    chatElements.promptAnswers.innerHTML = "<p class='empty-inline'>还没有回答。</p>";
     return;
   }
 
@@ -473,15 +473,15 @@ function renderDrawRound() {
   const round = state.currentDrawRound;
 
   if (!round) {
-    chatElements.drawRoundBadge.textContent = "Round 0";
-    chatElements.drawRoundAuthorText.textContent = "No round yet";
-    chatElements.drawRoundPromptText.textContent = "Create the first round";
+    chatElements.drawRoundBadge.textContent = "第 0 轮";
+    chatElements.drawRoundAuthorText.textContent = "还没有开始";
+    chatElements.drawRoundPromptText.textContent = "先创建第一轮";
     renderGuessCard(null);
     fillCanvasBase();
     return;
   }
 
-  chatElements.drawRoundBadge.textContent = `Round ${round.round_index || 1}`;
+  chatElements.drawRoundBadge.textContent = `第 ${round.round_index || 1} 轮`;
   chatElements.drawRoundAuthorText.textContent = round.drawer;
   chatElements.drawRoundPromptText.textContent = state.drawPromptVisible ? round.prompt : "******";
 
@@ -495,16 +495,16 @@ function renderGuessCard(round) {
 
   if (!round || !round.guess_author) {
     const text = document.createElement("p");
-    text.textContent = "No guess yet. Let the other person try.";
+    text.textContent = "还没有人来猜，让另一方试试看。";
     chatElements.drawGuessCard.append(text);
     return;
   }
 
   const title = document.createElement("strong");
-  title.textContent = `${round.guess_author} guessed`;
+  title.textContent = `${round.guess_author} 的猜测`;
 
   const text = document.createElement("p");
-  text.textContent = round.guess_text || "No text";
+  text.textContent = round.guess_text || "还没有内容";
 
   chatElements.drawGuessCard.append(title, text);
 }
@@ -533,7 +533,7 @@ async function handleDrawGuessSubmit(event) {
 
 async function saveCanvasToCurrentRound() {
   if (!state.currentDrawRound) {
-    window.alert("Start a round first.");
+    window.alert("请先开始一轮新的我画你猜。");
     return;
   }
 
@@ -675,7 +675,7 @@ async function fetchRows(tableName, localKey, options = {}) {
   if (error) {
     console.error(error);
     state.hasSupabase = false;
-    setModeStatus(`Cloud table ${tableName} is not ready. Falling back to local mode.`);
+    setModeStatus(`云端表 ${tableName} 还没准备好，页面已退回本地模式。`);
     return sortLocalRows(readJson(localKey, []), options);
   }
 
@@ -693,7 +693,7 @@ async function insertRow(tableName, localKey, payload) {
   const { error } = await state.supabase.from(tableName).insert(payload);
   if (error) {
     console.error(error);
-    window.alert(`Cloud insert failed for ${tableName}. Run the SQL file first.`);
+    window.alert(`云端写入失败：${tableName} 还没配置好，请先执行 SQL 文件。`);
   }
 }
 
@@ -707,7 +707,7 @@ async function updateRow(tableName, localKey, id, patch) {
   const { error } = await state.supabase.from(tableName).update(patch).eq("id", id);
   if (error) {
     console.error(error);
-    window.alert(`Cloud update failed for ${tableName}. Check update policy.`);
+    window.alert(`云端更新失败：${tableName} 的 update 权限可能还没打开。`);
   }
 }
 
@@ -721,7 +721,7 @@ async function deleteRow(tableName, localKey, id) {
   const { error } = await state.supabase.from(tableName).delete().eq("id", id);
   if (error) {
     console.error(error);
-    window.alert(`Cloud delete failed for ${tableName}. Check delete policy.`);
+    window.alert(`云端删除失败：${tableName} 的 delete 权限可能还没打开。`);
   }
 }
 
