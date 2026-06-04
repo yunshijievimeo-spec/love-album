@@ -2,7 +2,7 @@ const config = window.LOVE_ALBUM_CONFIG || {};
 const sessionKey = "love-album-unlocked";
 const localMemoriesKey = "love-album-demo-memories";
 const localMessagesKey = "love-album-demo-messages";
-const storageLimitBytes = 2 * 1024 * 1024 * 1024;
+const storageLimitBytes = 1024 * 1024 * 1024;
 const fallbackAveragePhotoBytes = 3 * 1024 * 1024;
 const messageTableName = config.messageTableName || "messages";
 
@@ -497,9 +497,9 @@ function updateStorageStats(memories) {
   const percent = Math.min(100, (usedBytes / storageLimitBytes) * 100);
   const remainingPhotos = Math.floor(remainingBytes / averageBytes);
 
-  elements.storageUsed.textContent = `项目已用约 ${formatBytes(usedBytes)} / 2 GB`;
+  elements.storageUsed.textContent = `照片已用约 ${formatBytes(usedBytes)} / 1 GB`;
   elements.storageMeter.style.width = `${Math.max(percent, usedBytes ? 2 : 0)}%`;
-  elements.storageSummary.textContent = `按项目 2 GB 空间估算，剩余约 ${formatBytes(remainingBytes)}，按目前照片大小预计还能上传约 ${remainingPhotos} 张。`;
+  elements.storageSummary.textContent = `按照片 1 GB 免费存储估算，剩余约 ${formatBytes(remainingBytes)}，按目前照片大小预计还能上传约 ${remainingPhotos} 张。`;
 }
 
 function createNotice(title, text) {
