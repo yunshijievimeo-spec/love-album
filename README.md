@@ -36,7 +36,8 @@ create table if not exists public.memories (
   location text,
   note text not null,
   photo_path text not null,
-  photo_url text not null
+  photo_url text not null,
+  file_size bigint not null default 0
 );
 
 alter table public.memories enable row level security;
@@ -50,6 +51,17 @@ create policy "Anyone can add memories"
 on public.memories for insert
 to anon
 with check (true);
+
+create policy "Anyone can update memories"
+on public.memories for update
+to anon
+using (true)
+with check (true);
+
+create policy "Anyone can delete memories"
+on public.memories for delete
+to anon
+using (true);
 ```
 
 4. 在 SQL Editor 继续执行 Storage 权限：
@@ -64,6 +76,11 @@ create policy "Anyone can upload love photos"
 on storage.objects for insert
 to anon
 with check (bucket_id = 'love-photos');
+
+create policy "Anyone can delete love photos"
+on storage.objects for delete
+to anon
+using (bucket_id = 'love-photos');
 ```
 
 5. 打开 `config.example.js`，填入：
@@ -82,6 +99,63 @@ supabaseAnonKey: "你的 Supabase anon public key"
 3. 部署完成后，把网址发给秀琴，两个人用共同密码进入。
 
 手机访问这个网址后，就可以直接选择手机相册里的照片上传。
+
+## 已上线项目升级 SQL
+
+如果你已经按旧版建好了 Supabase，再到 SQL Editor 执行这一段，开启修改、删除和空间估算：
+
+```sql
+alter table public.memories
+add column if not exists file_size bigint not null default 0;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'memories'
+      and policyname = 'Anyone can update memories'
+  ) then
+    create policy "Anyone can update memories"
+    on public.memories for update
+    to anon
+    using (true)
+    with check (true);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'memories'
+      and policyname = 'Anyone can delete memories'
+  ) then
+    create policy "Anyone can delete memories"
+    on public.memories for delete
+    to anon
+    using (true);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'Anyone can delete love photos'
+  ) then
+    create policy "Anyone can delete love photos"
+    on storage.objects for delete
+    to anon
+    using (bucket_id = 'love-photos');
+  end if;
+end $$;
+```
+
+空间显示是网站根据上传时记录的照片大小估算的，不是 Supabase 后台账单页的官方统计。旧照片没有记录大小时会按 0 处理，新上传的照片会正常计入。
 
 ## 隐私提醒
 

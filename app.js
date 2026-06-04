@@ -191,8 +191,7 @@ async function saveToSupabase(file, memory) {
   const { error: insertError } = await supabaseClient.from(config.tableName).insert({
     ...memory,
     photo_path: path,
-    photo_url: data.publicUrl,
-    file_size: file.size
+    photo_url: data.publicUrl
   });
 
   if (insertError) throw insertError;
@@ -206,7 +205,6 @@ async function saveToLocalDemo(file, memory) {
     created_at: new Date().toISOString(),
     photo_url: dataUrl,
     photo_path: "",
-    file_size: file.size,
     ...memory
   });
   localStorage.setItem(localMemoriesKey, JSON.stringify(memories.slice(0, 12)));
