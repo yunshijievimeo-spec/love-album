@@ -248,12 +248,27 @@ textarea:focus,
   background: linear-gradient(180deg, #ffffff 0%, #fff9f1 100%);
 }
 
+.counter-number {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+}
+
 .counter-body strong {
   font-family: "ZCOOL XiaoWei", "Noto Serif SC", serif;
   font-size: clamp(5.8rem, 18vw, 10rem);
   line-height: 1;
   font-weight: 400;
   color: #1f1f1f;
+}
+
+.counter-number span {
+  margin-left: 0.4rem;
+  margin-bottom: 1rem;
+  color: #5b514b;
+  font-size: clamp(1.35rem, 3.2vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1;
 }
 
 .counter-footer {
