@@ -43,9 +43,14 @@
 
       <section id="albumApp" class="album-app" hidden>
         <section class="love-counter" aria-label="相识纪念日">
-          <span>相识于 2025年12月25日</span>
-          <strong>相识第 <em id="daysTogether">1</em> 天</strong>
-          <span class="heart" aria-hidden="true">♥</span>
+          <div class="counter-header">认识已经</div>
+          <div class="counter-body">
+            <strong id="daysTogether">1</strong>
+          </div>
+          <div class="counter-footer">
+            <span>起始日：</span>
+            <time id="metDateText" datetime="2025-12-25">2025-12-25</time>
+          </div>
         </section>
 
         <header class="hero">
@@ -59,12 +64,13 @@
 
         <section class="composer" aria-label="新增旅行记录">
           <form id="memoryForm">
+            <input id="editingIdInput" type="hidden" />
             <div class="upload-box">
               <input id="photoInput" name="photo" type="file" accept="image/*" required />
               <label for="photoInput">
                 <span class="upload-icon">+</span>
-                <strong>上传一张照片</strong>
-                <small>手机拍的照片也可以直接选</small>
+                <strong id="uploadTitle">上传一张照片</strong>
+                <small id="uploadHint">手机拍的照片也可以直接选</small>
               </label>
               <img id="previewImage" alt="" hidden />
             </div>
@@ -84,15 +90,29 @@
               </label>
               <label class="wide">
                 文字记录
-                <textarea id="noteInput" name="note" rows="4" maxlength="240" placeholder="今天发生了什么，想对秀琴说什么..." required></textarea>
+                <textarea id="noteInput" name="note" rows="4" maxlength="240" placeholder="今天发生了什么，想对对方说什么..." required></textarea>
               </label>
             </div>
 
             <div class="form-actions">
               <p id="saveStatus" role="status"></p>
-              <button type="submit">保存这一刻</button>
+              <div class="action-buttons">
+                <button id="cancelEditButton" class="ghost-button" type="button" hidden>取消修改</button>
+                <button id="submitMemoryButton" type="submit">保存这一刻</button>
+              </div>
             </div>
           </form>
+        </section>
+
+        <section class="storage-panel" aria-label="存储空间">
+          <div>
+            <span>云端照片空间</span>
+            <strong id="storageUsed">已用约 0 MB</strong>
+          </div>
+          <div class="storage-meter" aria-hidden="true">
+            <span id="storageMeter"></span>
+          </div>
+          <p id="storageSummary">剩余约 1 GB，预计还能上传很多张照片。</p>
         </section>
 
         <section class="toolbar">
@@ -113,6 +133,11 @@
         </template>
       </section>
     </main>
+
+    <div id="photoLightbox" class="photo-lightbox" hidden>
+      <button id="lightboxClose" class="lightbox-close" type="button" aria-label="关闭大图">×</button>
+      <img id="lightboxImage" alt="" />
+    </div>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="./config.example.js"></script>

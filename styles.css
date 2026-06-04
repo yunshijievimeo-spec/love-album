@@ -6,6 +6,7 @@
   --rose-dark: #a95061;
   --mint: #7aa99a;
   --sun: #f0b45f;
+  --calendar-orange: #ef860f;
   --line: rgba(83, 55, 44, 0.14);
   --shadow: 0 22px 60px rgba(66, 38, 31, 0.18);
 }
@@ -26,6 +27,10 @@ body {
   background:
     radial-gradient(circle at 10% 10%, rgba(240, 180, 95, 0.25), transparent 26rem),
     linear-gradient(135deg, #fff8ed 0%, #ffecef 48%, #edf6f2 100%);
+}
+
+body.lightbox-open {
+  overflow: hidden;
 }
 
 button,
@@ -125,7 +130,9 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+.memory-photo-button:focus-visible,
+.lightbox-close:focus-visible {
   border-color: rgba(207, 111, 130, 0.65);
   box-shadow: 0 0 0 4px rgba(207, 111, 130, 0.12);
 }
@@ -198,41 +205,50 @@ textarea:focus {
 }
 
 .love-counter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  width: fit-content;
-  max-width: 100%;
-  margin: 0.25rem 0 1.1rem;
-  padding: 0.78rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 8px;
-  color: var(--muted);
-  background: rgba(255, 253, 248, 0.76);
-  box-shadow: 0 14px 34px rgba(66, 38, 31, 0.1);
-  backdrop-filter: blur(16px);
+  width: min(520px, 100%);
+  margin: 0.25rem auto 1.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(205, 118, 24, 0.2);
+  border-radius: 26px;
+  background: #fffefb;
+  box-shadow: 0 24px 50px rgba(66, 38, 31, 0.16);
 }
 
-.love-counter strong {
-  color: var(--rose-dark);
-  font-weight: 700;
-}
-
-.love-counter em {
-  font-style: normal;
-  font-size: 1.35rem;
-}
-
-.heart {
-  display: inline-grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
+.counter-header {
+  padding: 1.1rem 1.5rem;
   color: #fff;
-  background: var(--rose);
-  box-shadow: 0 8px 18px rgba(207, 111, 130, 0.26);
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #ff931c 0%, var(--calendar-orange) 100%);
+}
+
+.counter-body {
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+  padding: 1.5rem 1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fff9f1 100%);
+}
+
+.counter-body strong {
+  font-family: "ZCOOL XiaoWei", "Noto Serif SC", serif;
+  font-size: clamp(5.8rem, 18vw, 10rem);
+  line-height: 1;
+  font-weight: 400;
+  color: #1f1f1f;
+}
+
+.counter-footer {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1.1rem 1.5rem 1.35rem;
+  border-top: 1px dashed rgba(83, 55, 44, 0.12);
+  color: #8b827c;
+  font-size: clamp(0.98rem, 2vw, 1.2rem);
+  background: #fffdf9;
 }
 
 .hero {
@@ -240,7 +256,7 @@ textarea:focus {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding: 34px 0 22px;
+  padding: 22px 0 22px;
 }
 
 .hero h1 {
@@ -343,6 +359,64 @@ textarea:focus {
   gap: 1rem;
 }
 
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.action-buttons .ghost-button {
+  box-shadow: none;
+}
+
+.storage-panel {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.25rem 0 0;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.72);
+  box-shadow: 0 16px 40px rgba(66, 38, 31, 0.1);
+  backdrop-filter: blur(16px);
+}
+
+.storage-panel div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--muted);
+}
+
+.storage-panel strong {
+  color: var(--rose-dark);
+}
+
+.storage-meter {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(128, 108, 97, 0.16);
+}
+
+.storage-meter span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mint), var(--sun), var(--rose));
+  transition: width 0.25s ease;
+}
+
+.storage-panel p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -375,12 +449,39 @@ textarea:focus {
   box-shadow: 0 16px 34px rgba(66, 38, 31, 0.12);
 }
 
-.memory-card img {
+.memory-photo-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  color: inherit;
+  background: #f5eadf;
+}
+
+.memory-photo-button img {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
   background: #f5eadf;
+  transition: transform 0.28s ease;
+}
+
+.memory-photo-button:hover img {
+  transform: scale(1.04);
+}
+
+.memory-photo-hint {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.85rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.8rem;
+  background: rgba(21, 18, 17, 0.55);
+  backdrop-filter: blur(8px);
 }
 
 .memory-body {
@@ -408,6 +509,24 @@ textarea:focus {
   white-space: pre-wrap;
 }
 
+.card-actions {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.card-actions button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.card-actions button:last-child {
+  color: var(--rose-dark);
+}
+
 .empty-state {
   grid-column: 1 / -1;
   padding: 2rem;
@@ -417,6 +536,39 @@ textarea:focus {
 .empty-state p {
   margin-bottom: 0;
   color: var(--muted);
+}
+
+.photo-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2rem);
+  background: rgba(18, 12, 10, 0.82);
+  animation: fadeIn 0.2s ease;
+}
+
+.photo-lightbox img {
+  max-width: min(92vw, 1200px);
+  max-height: 86vh;
+  border-radius: 18px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+  animation: zoomIn 0.22s ease;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.8rem;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
 }
 
 @media (max-width: 860px) {
@@ -444,7 +596,8 @@ textarea:focus {
 
 @media (max-width: 560px) {
   .password-row,
-  .form-actions {
+  .form-actions,
+  .action-buttons {
     display: grid;
   }
 
@@ -462,6 +615,35 @@ textarea:focus {
   .upload-box label {
     min-height: 280px;
   }
+
+  .love-counter {
+    border-radius: 20px;
+  }
+
+  .counter-header {
+    padding: 1rem;
+    font-size: 1.3rem;
+  }
+
+  .counter-body {
+    min-height: 210px;
+    padding: 1rem;
+  }
+
+  .counter-footer {
+    flex-wrap: wrap;
+    padding: 1rem;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 @keyframes fadeIn {
