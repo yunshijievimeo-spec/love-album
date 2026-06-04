@@ -33,6 +33,9 @@ const elements = {
   storageMeter: document.querySelector("#storageMeter"),
   storageSummary: document.querySelector("#storageSummary"),
   daysTogether: document.querySelector("#daysTogether"),
+  hoursTogether: document.querySelector("#hoursTogether"),
+  minutesTogether: document.querySelector("#minutesTogether"),
+  secondsTogether: document.querySelector("#secondsTogether"),
   metDateText: document.querySelector("#metDateText"),
   emptyTemplate: document.querySelector("#emptyTemplate"),
   photoLightbox: document.querySelector("#photoLightbox"),
@@ -62,6 +65,7 @@ elements.dateInput.valueAsDate = new Date();
 if (elements.messageDateInput) elements.messageDateInput.valueAsDate = new Date();
 
 updateDaysTogether();
+window.setInterval(updateDaysTogether, 1000);
 restoreSession();
 
 elements.loginForm.addEventListener("submit", (event) => {
@@ -190,6 +194,17 @@ function updateDaysTogether() {
   const dayMs = 24 * 60 * 60 * 1000;
   const days = Math.max(1, Math.floor((current - start) / dayMs) + 1);
   elements.daysTogether.textContent = days.toString();
+
+  const diffMs = Math.max(0, today.getTime() - metDate.getTime());
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (elements.hoursTogether) elements.hoursTogether.textContent = hours.toString();
+  if (elements.minutesTogether) elements.minutesTogether.textContent = String(minutes).padStart(2, "0");
+  if (elements.secondsTogether) elements.secondsTogether.textContent = String(seconds).padStart(2, "0");
+
   elements.metDateText.dateTime = formatDateValue(start);
   elements.metDateText.textContent = formatCounterDate(start);
 }
