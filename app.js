@@ -364,6 +364,11 @@ async function saveMessageToSupabase(message) {
   if (error) throw error;
 }
 
+async function deleteMessageFromSupabase(id) {
+  const { error } = await supabaseClient.from(messageTableName).delete().eq("id", id);
+  if (error) throw error;
+}
+
 function saveMessageToLocal(message) {
   const messages = readLocalMessages();
   messages.unshift({
@@ -372,6 +377,11 @@ function saveMessageToLocal(message) {
     ...message
   });
   localStorage.setItem(localMessagesKey, JSON.stringify(messages.slice(0, 50)));
+}
+
+function deleteMessageFromLocal(id) {
+  const messages = readLocalMessages().filter((message) => message.id !== id);
+  localStorage.setItem(localMessagesKey, JSON.stringify(messages));
 }
 
 async function loadMessages() {
@@ -387,7 +397,12 @@ async function loadMessages() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      renderMessageRow("今天", "系统提示", "留言云端表还没建好，先支持本机留言。");
+      renderMessageRow({
+        id: "message-error",
+        message_date: new Date().toISOString().slice(0, 10),
+        author: "系统提示",
+        content: "留言云端表还没建好，先支持本机留言。"
+      });
       return;
     }
 
@@ -397,26 +412,57 @@ async function loadMessages() {
   }
 
   if (!messages.length) {
-    renderMessageRow("今天", "留言条", "还没有留言，写下第一句吧。");
+    renderMessageRow({
+      id: "message-empty",
+      message_date: new Date().toISOString().slice(0, 10),
+      author: "留言条",
+      content: "还没有留言，写下第一句吧。"
+    });
     return;
   }
 
   messages.forEach((message) => {
-    renderMessageRow(formatDate(message.message_date), message.author || "", message.content || "");
+    renderMessageRow(message);
   });
 }
 
-function renderMessageRow(date, author, content) {
+function renderMessageRow(message) {
   const row = document.createElement("tr");
   const dateCell = document.createElement("td");
   const authorCell = document.createElement("td");
   const contentCell = document.createElement("td");
+  const actionCell = document.createElement("td");
+  const deleteButton = document.createElement("button");
 
-  dateCell.textContent = date;
-  authorCell.textContent = author;
-  contentCell.textContent = content;
+  dateCell.textContent = formatDate(message.message_date);
+  authorCell.textContent = message.author || "";
+  contentCell.textContent = message.content || "";
+  actionCell.className = "message-actions";
 
-  row.append(dateCell, authorCell, contentCell);
+  deleteButton.type = "button";
+  deleteButton.className = "message-delete-button";
+  deleteButton.textContent = "删除";
+  deleteButton.addEventListener("click", async () => {
+    const confirmed = window.confirm("确定删除这条留言吗？");
+    if (!confirmed) return;
+
+    try {
+      if (hasSupabase && message.id) {
+        await deleteMessageFromSupabase(message.id);
+      } else if (message.id) {
+        deleteMessageFromLocal(message.id);
+      }
+
+      elements.messageStatus.textContent = "留言已删除。";
+      await loadMessages();
+    } catch (error) {
+      console.error(error);
+      elements.messageStatus.textContent = "删除失败，请检查留言表 delete 权限。";
+    }
+  });
+
+  actionCell.append(deleteButton);
+  row.append(dateCell, authorCell, contentCell, actionCell);
   elements.messageTableBody.append(row);
 }
 
