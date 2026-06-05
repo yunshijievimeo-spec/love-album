@@ -295,9 +295,9 @@ function spawnCounterHeart() {
   heart.textContent = "❤";
 
   const side = Math.random() > 0.5 ? "right" : "left";
-  const horizontalOffset = 8 + Math.random() * 30;
-  const verticalOffset = 14 + Math.random() * 72;
-  const drift = side === "left" ? -20 - Math.random() * 18 : 20 + Math.random() * 18;
+  const horizontalOffset = 32 + Math.random() * 10;
+  const verticalOffset = 22 + Math.random() * 56;
+  const drift = side === "left" ? -14 - Math.random() * 10 : 14 + Math.random() * 10;
   const scale = 0.78 + Math.random() * 0.55;
   const duration = 420 + Math.random() * 220;
 
