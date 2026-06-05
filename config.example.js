@@ -4,6 +4,7 @@ window.LOVE_ALBUM_CONFIG = {
   supabaseAnonKey: "sb_publishable_8DTggSrA_sH4bXzBNbFl2A_QcJKHOG-",
   bucketName: "love-photos",
   tableName: "memories",
+  checkinTableName: "daily_checkins",
   chatMessageTableName: "couple_chat_messages",
   statusTableName: "couple_status_cards",
   riddleTableName: "couple_riddles",

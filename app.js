@@ -2,9 +2,12 @@ const config = window.LOVE_ALBUM_CONFIG || {};
 const sessionKey = "love-album-unlocked";
 const localMemoriesKey = "love-album-demo-memories";
 const localMessagesKey = "love-album-demo-messages";
+const localCheckinsKey = "love-album-demo-checkins";
+const checkinProfileKey = "love-album-checkin-profile";
 const storageLimitBytes = 1024 * 1024 * 1024;
 const fallbackAveragePhotoBytes = 3 * 1024 * 1024;
 const messageTableName = config.messageTableName || "messages";
+const checkinTableName = config.checkinTableName || "daily_checkins";
 
 const elements = {
   lockScreen: document.querySelector("#lockScreen"),
@@ -36,11 +39,16 @@ const elements = {
   storageSummary: document.querySelector("#storageSummary"),
   loveCounter: document.querySelector(".love-counter"),
   counterHearts: document.querySelector("#counterHearts"),
+  counterBigHeart: document.querySelector("#counterBigHeart"),
+  counterNumber: document.querySelector(".counter-number"),
   daysTogether: document.querySelector("#daysTogether"),
   hoursTogether: document.querySelector("#hoursTogether"),
   minutesTogether: document.querySelector("#minutesTogether"),
   secondsTogether: document.querySelector("#secondsTogether"),
   metDateText: document.querySelector("#metDateText"),
+  checkinIdentitySelect: document.querySelector("#checkinIdentitySelect"),
+  dailyCheckinButton: document.querySelector("#dailyCheckinButton"),
+  dailyCheckinStatus: document.querySelector("#dailyCheckinStatus"),
   emptyTemplate: document.querySelector("#emptyTemplate"),
   photoLightbox: document.querySelector("#photoLightbox"),
   lightboxClose: document.querySelector("#lightboxClose"),
@@ -71,9 +79,11 @@ let isDaysAnimating = false;
 let heartBurstTimer = null;
 let lockPhotoHeartsTimer = null;
 let lastPasswordLength = 0;
+let todaysCheckins = [];
 
 elements.dateInput.valueAsDate = new Date();
 if (elements.messageDateInput) elements.messageDateInput.valueAsDate = new Date();
+elements.checkinIdentitySelect.value = localStorage.getItem(checkinProfileKey) || "号号";
 
 updateDaysTogether();
 window.setInterval(updateDaysTogether, 1000);
@@ -107,6 +117,14 @@ elements.sitePassword.addEventListener("input", () => {
   lastPasswordLength = currentLength;
 });
 
+elements.checkinIdentitySelect.addEventListener("change", () => {
+  localStorage.setItem(checkinProfileKey, elements.checkinIdentitySelect.value);
+  renderCheckinState();
+  updateDaysTogether();
+});
+
+elements.dailyCheckinButton.addEventListener("click", handleDailyCheckin);
+
 elements.logoutButton.addEventListener("click", () => {
   sessionStorage.removeItem(sessionKey);
   closeLightbox();
@@ -117,7 +135,7 @@ elements.logoutButton.addEventListener("click", () => {
 });
 
 elements.refreshButton.addEventListener("click", async () => {
-  await Promise.all([loadMemories(), loadMessages()]);
+  await Promise.all([loadMemories(), loadMessages(), loadCheckins()]);
 });
 elements.cancelEditButton.addEventListener("click", resetMemoryForm);
 elements.lightboxClose.addEventListener("click", closeLightbox);
@@ -182,7 +200,7 @@ async function unlock() {
   stopLockPhotoHearts();
   elements.lockScreen.hidden = true;
   elements.albumApp.hidden = false;
-  await Promise.all([loadMemories(), loadMessages()]);
+  await Promise.all([loadMemories(), loadMessages(), loadCheckins()]);
   animateDaysTogether();
   focusCounterIntoView();
 }
@@ -293,9 +311,7 @@ function resetMessageForm() {
 function updateDaysTogether() {
   const today = new Date();
   const start = new Date(metDate.getFullYear(), metDate.getMonth(), metDate.getDate());
-  const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const dayMs = 24 * 60 * 60 * 1000;
-  const days = Math.max(1, Math.floor((current - start) / dayMs) + 1);
+  const days = getDisplayDays();
   if (!isDaysAnimating) {
     elements.daysTogether.textContent = days.toString();
   }
@@ -315,35 +331,7 @@ function updateDaysTogether() {
 }
 
 function animateDaysTogether() {
-  const today = new Date();
-  const start = new Date(metDate.getFullYear(), metDate.getMonth(), metDate.getDate());
-  const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const dayMs = 24 * 60 * 60 * 1000;
-  const targetDays = Math.max(1, Math.floor((current - start) / dayMs) + 1);
-  const duration = 1400;
-  const animationStart = performance.now();
-
-  isDaysAnimating = true;
-  elements.daysTogether.textContent = "0";
-  startCounterHearts();
-
-  function tick(now) {
-    const progress = Math.min(1, (now - animationStart) / duration);
-    const easedProgress = 1 - Math.pow(1 - progress, 3);
-    const currentValue = Math.max(0, Math.round(targetDays * easedProgress));
-    elements.daysTogether.textContent = currentValue.toString();
-
-    if (progress < 1) {
-      window.requestAnimationFrame(tick);
-      return;
-    }
-
-    elements.daysTogether.textContent = targetDays.toString();
-    isDaysAnimating = false;
-    stopCounterHearts();
-  }
-
-  window.requestAnimationFrame(tick);
+  animateDaysValue(0, getDisplayDays(), { duration: 1400, withSmallHearts: true });
 }
 
 function focusCounterIntoView() {
@@ -355,6 +343,41 @@ function focusCounterIntoView() {
       block: "start"
     });
   });
+}
+
+function animateDaysValue(fromValue, toValue, options = {}) {
+  const duration = options.duration || 1000;
+  const animationStart = performance.now();
+
+  isDaysAnimating = true;
+  elements.daysTogether.textContent = String(fromValue);
+
+  if (options.withSmallHearts) {
+    startCounterHearts();
+  }
+
+  function tick(now) {
+    const progress = Math.min(1, (now - animationStart) / duration);
+    const easedProgress = 1 - Math.pow(1 - progress, 3);
+    const nextValue = Math.round(fromValue + (toValue - fromValue) * easedProgress);
+    elements.daysTogether.textContent = String(nextValue);
+
+    if (progress < 1) {
+      window.requestAnimationFrame(tick);
+      return;
+    }
+
+    elements.daysTogether.textContent = String(toValue);
+    isDaysAnimating = false;
+    if (options.withSmallHearts) {
+      stopCounterHearts();
+    }
+    if (options.withBigHeart) {
+      triggerBigHeartBurst();
+    }
+  }
+
+  window.requestAnimationFrame(tick);
 }
 
 function startCounterHearts() {
@@ -399,6 +422,135 @@ function spawnCounterHeart() {
   window.setTimeout(() => {
     heart.remove();
   }, duration + 60);
+}
+
+function triggerBigHeartBurst() {
+  if (!elements.counterBigHeart || !elements.counterNumber) return;
+
+  elements.counterNumber.classList.remove("counter-number-pop");
+  void elements.counterNumber.offsetWidth;
+  elements.counterNumber.classList.add("counter-number-pop");
+  window.setTimeout(() => {
+    elements.counterNumber.classList.remove("counter-number-pop");
+  }, 420);
+
+  elements.counterBigHeart.classList.remove("show");
+  void elements.counterBigHeart.offsetWidth;
+  elements.counterBigHeart.classList.add("show");
+  window.setTimeout(() => {
+    elements.counterBigHeart.classList.remove("show");
+  }, 900);
+}
+
+async function handleDailyCheckin() {
+  const person = getSelectedCheckinPerson();
+  if (hasCheckedToday(person)) return;
+
+  const previousDays = getDisplayDays();
+  elements.dailyCheckinButton.disabled = true;
+  elements.dailyCheckinStatus.textContent = "正在打卡...";
+
+  const payload = {
+    id: crypto.randomUUID(),
+    person,
+    checkin_date: getTodayKey(),
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    if (hasSupabase) {
+      const { error } = await supabaseClient.from(checkinTableName).insert(payload);
+      if (error) throw error;
+    } else {
+      const checkins = readLocalCheckins();
+      checkins.push(payload);
+      localStorage.setItem(localCheckinsKey, JSON.stringify(checkins));
+    }
+
+    await loadCheckins();
+    animateDaysValue(previousDays, getDisplayDays(), { duration: 640, withBigHeart: true });
+  } catch (error) {
+    console.error(error);
+    elements.dailyCheckinStatus.textContent = "打卡失败，请检查云端表或网络。";
+    elements.dailyCheckinButton.disabled = false;
+  }
+}
+
+async function loadCheckins() {
+  if (hasSupabase) {
+    const { data, error } = await supabaseClient
+      .from(checkinTableName)
+      .select("*")
+      .eq("checkin_date", getTodayKey())
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      todaysCheckins = readLocalCheckins().filter((item) => item.checkin_date === getTodayKey());
+      renderCheckinState("打卡云端表还没建好，先用本机状态。");
+      return;
+    }
+
+    todaysCheckins = data || [];
+    renderCheckinState();
+    return;
+  }
+
+  todaysCheckins = readLocalCheckins().filter((item) => item.checkin_date === getTodayKey());
+  renderCheckinState();
+}
+
+function renderCheckinState(customMessage) {
+  const person = getSelectedCheckinPerson();
+  const checkedNames = todaysCheckins.map((item) => item.person);
+  const checkedToday = hasCheckedToday(person);
+
+  elements.dailyCheckinButton.hidden = checkedToday;
+  elements.dailyCheckinButton.disabled = false;
+
+  if (customMessage) {
+    elements.dailyCheckinStatus.textContent = customMessage;
+    return;
+  }
+
+  if (checkedNames.length) {
+    elements.dailyCheckinStatus.textContent = checkedToday
+      ? `今天已打卡：${checkedNames.join("、")}`
+      : `今天已打卡：${checkedNames.join("、")}，轮到${person}啦。`;
+    return;
+  }
+
+  elements.dailyCheckinStatus.textContent = `今天还没有打卡，等${person}点亮这一天。`;
+}
+
+function hasCheckedToday(person) {
+  return todaysCheckins.some((item) => item.person === person);
+}
+
+function getSelectedCheckinPerson() {
+  return elements.checkinIdentitySelect.value || "号号";
+}
+
+function getTodayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getBaseDaysTogether() {
+  const today = new Date();
+  const start = new Date(metDate.getFullYear(), metDate.getMonth(), metDate.getDate());
+  const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dayMs = 24 * 60 * 60 * 1000;
+  return Math.max(1, Math.floor((current - start) / dayMs) + 1);
+}
+
+function getDisplayDays() {
+  const baseDays = getBaseDaysTogether();
+  return hasCheckedToday(getSelectedCheckinPerson())
+    ? baseDays
+    : Math.max(1, baseDays - 1);
 }
 
 async function saveToSupabase(file, memory) {
@@ -852,6 +1004,14 @@ function readLocalMemories() {
 function readLocalMessages() {
   try {
     return JSON.parse(localStorage.getItem(localMessagesKey) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function readLocalCheckins() {
+  try {
+    return JSON.parse(localStorage.getItem(localCheckinsKey) || "[]");
   } catch {
     return [];
   }

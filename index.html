@@ -48,6 +48,7 @@
           <div class="counter-header">号号和秀琴相伴的</div>
           <div class="counter-body">
             <div id="counterHearts" class="counter-hearts" aria-hidden="true"></div>
+            <div id="counterBigHeart" class="counter-big-heart" aria-hidden="true">❤</div>
             <div class="counter-number">
               <strong id="daysTogether">1</strong>
               <span>天</span>
@@ -61,6 +62,17 @@
           <div class="counter-footer">
             <span>起始日：</span>
             <time id="metDateText" datetime="2026-01-01">2026-01-01</time>
+          </div>
+          <div class="counter-checkin">
+            <label class="checkin-identity" for="checkinIdentitySelect">
+              今天是
+              <select id="checkinIdentitySelect">
+                <option value="号号">号号</option>
+                <option value="秀琴">秀琴</option>
+              </select>
+            </label>
+            <button id="dailyCheckinButton" class="daily-checkin-button" type="button">美好的一天</button>
+            <p id="dailyCheckinStatus" class="daily-checkin-status" role="status"></p>
           </div>
         </section>
 

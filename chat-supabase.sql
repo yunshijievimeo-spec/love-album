@@ -44,11 +44,20 @@ create table if not exists public.couple_draw_rounds (
   guess_text text not null default ''
 );
 
+create table if not exists public.daily_checkins (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  checkin_date date not null,
+  person text not null,
+  unique (checkin_date, person)
+);
+
 alter table public.couple_chat_messages enable row level security;
 alter table public.couple_status_cards enable row level security;
 alter table public.couple_riddles enable row level security;
 alter table public.couple_question_rounds enable row level security;
 alter table public.couple_draw_rounds enable row level security;
+alter table public.daily_checkins enable row level security;
 
 drop policy if exists "Anyone can read couple_chat_messages" on public.couple_chat_messages;
 create policy "Anyone can read couple_chat_messages"
@@ -172,5 +181,30 @@ with check (true);
 drop policy if exists "Anyone can delete couple_draw_rounds" on public.couple_draw_rounds;
 create policy "Anyone can delete couple_draw_rounds"
 on public.couple_draw_rounds for delete
+to anon
+using (true);
+
+drop policy if exists "Anyone can read daily_checkins" on public.daily_checkins;
+create policy "Anyone can read daily_checkins"
+on public.daily_checkins for select
+to anon
+using (true);
+
+drop policy if exists "Anyone can insert daily_checkins" on public.daily_checkins;
+create policy "Anyone can insert daily_checkins"
+on public.daily_checkins for insert
+to anon
+with check (true);
+
+drop policy if exists "Anyone can update daily_checkins" on public.daily_checkins;
+create policy "Anyone can update daily_checkins"
+on public.daily_checkins for update
+to anon
+using (true)
+with check (true);
+
+drop policy if exists "Anyone can delete daily_checkins" on public.daily_checkins;
+create policy "Anyone can delete daily_checkins"
+on public.daily_checkins for delete
 to anon
 using (true);
