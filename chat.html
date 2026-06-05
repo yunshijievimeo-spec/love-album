@@ -19,7 +19,7 @@
           <p class="eyebrow">Couple Space</p>
           <h1>互动小屋</h1>
           <p class="hero-text">
-            这里不再放聊天区和小游戏，改成更有仪式感的小互动。每天上来按一按、答一答、留一句话，两个人都会在同一个线上空间里看到。
+            这里不再放聊天区和小游戏，改成更有仪式感的小互动。每天上来按一按、答一答、留一句话，两个人都会在同一个线上空间里看见。
           </p>
         </div>
 
@@ -33,16 +33,16 @@
           <div class="identity-card">
             <label for="identitySelect">今天是谁打开的小屋</label>
             <select id="identitySelect">
-              <option value="号号">号号</option>
+              <option value="浩浩">浩浩</option>
               <option value="秀琴">秀琴</option>
             </select>
-            <p id="identityHint">你选择谁，默认就会以谁的身份保存。</p>
+            <p id="identityHint">你选择谁，默认就会以谁的身份保存互动内容。</p>
           </div>
 
           <div class="hero-actions">
             <a class="soft-button ghost" href="./index.html">返回相册</a>
             <button id="refreshAllButton" class="soft-button" type="button">刷新线上内容</button>
-            <button id="clearLocalCacheButton" class="soft-button ghost" type="button">清空本机缓存</button>
+            <button id="clearLocalCacheButton" class="soft-button ghost" type="button">清空本地缓存</button>
           </div>
         </div>
       </section>
@@ -52,36 +52,41 @@
           <div class="card-head">
             <div>
               <p class="card-kicker">Garden</p>
-              <h2>一起养花</h2>
+              <h2>一起养果子</h2>
             </div>
-            <span id="gardenStageBadge" class="status-badge">第 0 / 12 朵</span>
+            <span id="gardenStageBadge" class="status-badge">第 1 / 12 月</span>
           </div>
 
           <p class="card-text">
-            先从一株小花苗开始。每天每人最多浇 12 次，两个人一天最多 24 次。把当天的 24 次浇满，坚持养满 20 天，才会真正开出第 1 朵花。
+            每个月是一只小玻璃瓶。每天每人最多浇 12 点，两个人一天最多 24 点；把这 24 点慢慢浇满，累计养够 20 天，这个月的瓶口就会结出一对小果子。
           </p>
 
           <div class="garden-layout">
             <div class="garden-visual" id="gardenVisual">
               <div class="garden-sky"></div>
-              <div class="garden-blooms" id="gardenBlooms"></div>
-              <div class="garden-plant">
-                <div class="garden-sprout" id="gardenSprout">
-                  <span class="sprout-leaf sprout-left"></span>
-                  <span class="sprout-leaf sprout-right"></span>
+              <div class="garden-yearline" id="gardenYearline"></div>
+              <div class="garden-focus">
+                <div class="garden-bottle" id="gardenBottle">
+                  <div class="garden-bottle-mouth"></div>
+                  <div class="garden-fruit" id="gardenFruit">
+                    <span class="garden-fruit-stem"></span>
+                    <span class="garden-fruit-leaf left"></span>
+                    <span class="garden-fruit-leaf right"></span>
+                    <span class="garden-fruit-berry left"></span>
+                    <span class="garden-fruit-berry right"></span>
+                    <span class="garden-fruit-spark"></span>
+                  </div>
+                  <div class="garden-bottle-neck"></div>
+                  <div class="garden-bottle-body">
+                    <div id="gardenBottleWater" class="garden-bottle-water"></div>
+                  </div>
+                  <div class="garden-bottle-shine"></div>
+                  <div id="gardenBottleLabel" class="garden-bottle-label">齐心协力</div>
+                  <div class="garden-bottle-base"></div>
                 </div>
-                <div class="garden-flower" id="gardenFlower">
-                  <span class="petal petal-a"></span>
-                  <span class="petal petal-b"></span>
-                  <span class="petal petal-c"></span>
-                  <span class="petal petal-d"></span>
-                  <span class="flower-core"></span>
-                </div>
-                <div class="garden-stem"></div>
-                <div class="garden-leaf leaf-left"></div>
-                <div class="garden-leaf leaf-right"></div>
-                <div class="garden-pot"></div>
+                <div class="garden-bottle-shadow"></div>
               </div>
+              <div id="gardenWateringLayer" class="garden-watering-layer"></div>
             </div>
 
             <div class="garden-panel">
@@ -91,7 +96,7 @@
                   <strong id="gardenTodayTotal">0 / 24</strong>
                 </div>
                 <div class="garden-stat">
-                  <span>号号今天</span>
+                  <span>浩浩今天</span>
                   <strong id="gardenHaohaoCount">0 / 12</strong>
                 </div>
                 <div class="garden-stat">
@@ -99,8 +104,8 @@
                   <strong id="gardenXiuqinCount">0 / 12</strong>
                 </div>
                 <div class="garden-stat">
-                  <span>这一朵进度</span>
-                  <strong id="gardenProgressText">0 / 480</strong>
+                  <span>本月养成</span>
+                  <strong id="gardenProgressText">0 / 20 天</strong>
                 </div>
               </div>
 
@@ -108,12 +113,12 @@
                 <div class="garden-progress-bar">
                   <div id="gardenProgressFill" class="garden-progress-fill"></div>
                 </div>
-                <p id="gardenProgressHint" class="garden-progress-hint">先把小花苗养大，浇满 24 次的一天越多，离开花越近。</p>
+                <p id="gardenProgressHint" class="garden-progress-hint">先把这一瓶慢慢养甜，今天的 24 点水越接近浇满，离结果子就越近。</p>
               </div>
 
               <div class="garden-actions">
-                <button id="waterOneButton" class="soft-button" type="button">浇 1 次水</button>
-                <button id="waterTwoButton" class="soft-button ghost" type="button">浇 2 次水</button>
+                <button id="waterOneButton" class="soft-button" type="button">浇 1 点水</button>
+                <button id="waterTwoButton" class="soft-button ghost" type="button">浇 2 点水</button>
               </div>
 
               <div id="gardenSummary" class="info-panel"></div>
@@ -146,12 +151,12 @@
                 <div class="leg left"></div>
                 <div class="leg right"></div>
               </div>
-              <div class="hug-heart">❤</div>
+              <div class="hug-heart">&#10084;</div>
               <div class="ritual-ground"></div>
             </div>
           </div>
 
-          <button id="hugButton" class="soft-button" type="button">抱一下</button>
+          <button id="hugButton" class="soft-button" type="button">抱一个</button>
         </article>
 
         <article class="feature-card lamp-card">
@@ -239,10 +244,10 @@
               <p class="card-kicker">7</p>
               <h2>小纸条胶囊</h2>
             </div>
-            <span class="status-badge">悄悄话</span>
+            <span class="status-badge">悄悄说</span>
           </div>
 
-          <p class="card-text">留一句今天想说的话，字数短短的就够，很省空间，但很有感觉。</p>
+          <p class="card-text">留一句今天想说的话，字数短短的就好，很省空间，但很有感觉。</p>
 
           <form id="capsuleForm" class="stack-form">
             <label>
@@ -259,7 +264,6 @@
           </form>
           <div id="capsuleList" class="capsule-list"></div>
         </article>
-
       </section>
     </main>
 

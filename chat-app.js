@@ -34,6 +34,22 @@ const GARDEN_DAILY_LIMIT_PER_PERSON = 12;
 const GARDEN_DAILY_LIMIT_TOTAL = 24;
 const GARDEN_WATER_PER_BLOOM = 480;
 const GARDEN_MAX_BLOOMS = 12;
+const GARDEN_PEOPLE = ["浩浩", "秀琴"];
+const GARDEN_MONTH_LABELS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+const GARDEN_PHRASES = [
+  "齐心协力",
+  "慢慢变甜",
+  "一起长大",
+  "今天也在",
+  "你浇一半",
+  "我浇一半",
+  "把爱养满",
+  "同频发芽",
+  "稳稳幸福",
+  "心意满瓶",
+  "小小丰收",
+  "来年再见"
+];
 
 const state = {
   hasSupabase: Boolean(config.supabaseUrl && config.supabaseAnonKey && window.supabase),
@@ -42,6 +58,8 @@ const state = {
   currentSyncRound: null,
   gardenRows: []
 };
+
+state.identity = normalizeIdentity(state.identity);
 
 const elements = {
   modeBadge: document.querySelector("#modeBadge"),
@@ -70,9 +88,12 @@ const elements = {
   capsuleInput: document.querySelector("#capsuleInput"),
   capsuleList: document.querySelector("#capsuleList"),
   gardenVisual: document.querySelector("#gardenVisual"),
-  gardenBlooms: document.querySelector("#gardenBlooms"),
-  gardenSprout: document.querySelector("#gardenSprout"),
-  gardenFlower: document.querySelector("#gardenFlower"),
+  gardenYearline: document.querySelector("#gardenYearline"),
+  gardenBottle: document.querySelector("#gardenBottle"),
+  gardenFruit: document.querySelector("#gardenFruit"),
+  gardenBottleWater: document.querySelector("#gardenBottleWater"),
+  gardenBottleLabel: document.querySelector("#gardenBottleLabel"),
+  gardenWateringLayer: document.querySelector("#gardenWateringLayer"),
   gardenStageBadge: document.querySelector("#gardenStageBadge"),
   gardenTodayTotal: document.querySelector("#gardenTodayTotal"),
   gardenHaohaoCount: document.querySelector("#gardenHaohaoCount"),
@@ -117,7 +138,20 @@ function bindEvents() {
 function syncIdentityUi() {
   elements.identitySelect.value = state.identity;
   elements.identityHint.textContent = `当前默认会以 ${state.identity} 的身份保存互动内容。`;
+  elements.identityHint.textContent = `当前默认会以 ${state.identity} 的身份保存互动内容。`;
   syncScorePreview();
+}
+
+function normalizeIdentity(value) {
+  if (value === "浩浩" || value === "鍙峰彿" || value === "号号") {
+    return "浩浩";
+  }
+
+  if (value === "秀琴" || value === "绉€鐞?" || value === "绉€鐞?" || value === "秀琴") {
+    return "秀琴";
+  }
+
+  return "浩浩";
 }
 
 function handleIdentityChange(event) {
@@ -754,6 +788,244 @@ function readJson(key, fallback) {
 
 function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function normalizeIdentity(value) {
+  if (value === "浩浩" || value === "鍙峰彿" || value === "号号") {
+    return "浩浩";
+  }
+
+  if (value === "秀琴" || value === "绉€鐞?" || value === "绉€鐞?" || value === "秀琴") {
+    return "秀琴";
+  }
+
+  return "浩浩";
+}
+
+function syncIdentityUi() {
+  state.identity = normalizeIdentity(state.identity);
+  elements.identitySelect.value = state.identity;
+  elements.identityHint.textContent = `当前默认会以 ${state.identity} 的身份保存互动内容。`;
+  syncScorePreview();
+}
+
+async function handleGardenWater(amount) {
+  const today = getTodayKey();
+  const rows = state.gardenRows.length
+    ? state.gardenRows
+    : await fetchRows(tableNames.gardenWatering, localKeys.gardenWatering, {
+        orderColumn: "water_date",
+        ascending: true,
+        limit: 500
+      });
+
+  const todayRows = rows.filter((item) => item.water_date === today);
+  const me = todayRows.find((item) => normalizeIdentity(item.person) === state.identity);
+  const myCount = Number(me?.count || 0);
+  const totalCount = todayRows.reduce((sum, item) => sum + Number(item.count || 0), 0);
+  const allowedByMe = Math.max(0, GARDEN_DAILY_LIMIT_PER_PERSON - myCount);
+  const allowedByTotal = Math.max(0, GARDEN_DAILY_LIMIT_TOTAL - totalCount);
+  const actualAmount = Math.min(amount, allowedByMe, allowedByTotal);
+
+  if (actualAmount <= 0) {
+    renderGarden();
+    return;
+  }
+
+  spawnWateringAnimation(actualAmount);
+
+  if (me) {
+    await updateRow(tableNames.gardenWatering, localKeys.gardenWatering, me.id, {
+      count: myCount + actualAmount
+    });
+  } else {
+    await insertRow(tableNames.gardenWatering, localKeys.gardenWatering, {
+      id: crypto.randomUUID(),
+      water_date: today,
+      person: state.identity,
+      count: actualAmount,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  await hydrateGarden();
+}
+
+function renderGarden() {
+  const stats = getGardenStats();
+
+  elements.gardenStageBadge.textContent =
+    stats.completedMonths >= GARDEN_MAX_BLOOMS
+      ? `第 ${GARDEN_MAX_BLOOMS} / ${GARDEN_MAX_BLOOMS} 月`
+      : `第 ${stats.activeMonthNumber} / ${GARDEN_MAX_BLOOMS} 月`;
+  elements.gardenTodayTotal.textContent = `${stats.todayTotal} / ${GARDEN_DAILY_LIMIT_TOTAL}`;
+  elements.gardenHaohaoCount.textContent = `${stats.haohaoToday} / ${GARDEN_DAILY_LIMIT_PER_PERSON}`;
+  elements.gardenXiuqinCount.textContent = `${stats.xiuqinToday} / ${GARDEN_DAILY_LIMIT_PER_PERSON}`;
+  elements.gardenProgressText.textContent = `${formatGardenDays(stats.dayEquivalent)} / 20 天`;
+  elements.gardenProgressFill.style.width = `${stats.progressPercent}%`;
+
+  if (elements.gardenBottleWater) {
+    elements.gardenBottleWater.style.height = `${stats.waterLevelPercent}%`;
+  }
+
+  if (elements.gardenBottleLabel) {
+    elements.gardenBottleLabel.textContent = GARDEN_PHRASES[stats.activeMonthIndex];
+  }
+
+  if (elements.gardenFruit) {
+    elements.gardenFruit.classList.toggle("is-on", stats.completedCurrentMonth);
+  }
+
+  renderGardenYearline(stats);
+
+  const myTodayCount = state.identity === GARDEN_PEOPLE[0] ? stats.haohaoToday : stats.xiuqinToday;
+  const remainMine = Math.max(0, GARDEN_DAILY_LIMIT_PER_PERSON - myTodayCount);
+  const remainTotal = Math.max(0, GARDEN_DAILY_LIMIT_TOTAL - stats.todayTotal);
+  const canWaterOne = remainMine >= 1 && remainTotal >= 1 && stats.completedMonths < GARDEN_MAX_BLOOMS;
+  const canWaterTwo = remainMine >= 2 && remainTotal >= 2 && stats.completedMonths < GARDEN_MAX_BLOOMS;
+
+  elements.waterOneButton.disabled = !canWaterOne;
+  elements.waterTwoButton.disabled = !canWaterTwo;
+
+  if (stats.completedMonths >= GARDEN_MAX_BLOOMS) {
+    elements.gardenProgressHint.textContent = "12 个月的小果子都已经养满了，这一年被你们照顾得很圆满。";
+  } else if (stats.todayTotal >= GARDEN_DAILY_LIMIT_TOTAL) {
+    elements.gardenProgressHint.textContent = "今天的 24 点水已经浇满了，明天继续一起把这瓶养甜。";
+  } else {
+    elements.gardenProgressHint.textContent = `离这瓶结出小果子还差 ${formatGardenDays(
+      stats.remainingForNextBloom / GARDEN_DAILY_LIMIT_TOTAL
+    )} 天的水量。`;
+  }
+
+  renderInfoPanel(
+    elements.gardenSummary,
+    `累计养成 ${stats.completedMonths} / ${GARDEN_MAX_BLOOMS} 月，相当于 ${formatGardenDays(
+      stats.totalWater / GARDEN_DAILY_LIMIT_TOTAL
+    )} / 240 天水量`,
+    `今天还能再浇 ${remainTotal} 点，你当前身份还能再浇 ${remainMine} 点。`
+  );
+}
+
+function getGardenStats() {
+  const today = getTodayKey();
+  const totalWater = state.gardenRows.reduce((sum, item) => sum + Number(item.count || 0), 0);
+  const cappedTotalWater = Math.min(totalWater, GARDEN_WATER_PER_BLOOM * GARDEN_MAX_BLOOMS);
+  const completedMonths = Math.min(GARDEN_MAX_BLOOMS, Math.floor(cappedTotalWater / GARDEN_WATER_PER_BLOOM));
+  const currentProgress =
+    completedMonths >= GARDEN_MAX_BLOOMS ? GARDEN_WATER_PER_BLOOM : cappedTotalWater % GARDEN_WATER_PER_BLOOM;
+  const todayRows = state.gardenRows.filter((item) => item.water_date === today);
+  const todayTotal = todayRows.reduce((sum, item) => sum + Number(item.count || 0), 0);
+  const haohaoRow = todayRows.find((item) => normalizeIdentity(item.person) === GARDEN_PEOPLE[0]);
+  const xiuqinRow = todayRows.find((item) => normalizeIdentity(item.person) === GARDEN_PEOPLE[1]);
+  const haohaoToday = Number(haohaoRow?.count || 0);
+  const xiuqinToday = Number(xiuqinRow?.count || 0);
+  const remainingForNextBloom =
+    completedMonths >= GARDEN_MAX_BLOOMS ? 0 : Math.max(0, GARDEN_WATER_PER_BLOOM - currentProgress);
+  const activeMonthIndex = Math.min(completedMonths, GARDEN_MAX_BLOOMS - 1);
+  const dayEquivalent = currentProgress / GARDEN_DAILY_LIMIT_TOTAL;
+
+  return {
+    totalWater: cappedTotalWater,
+    completedMonths,
+    currentProgress,
+    progressPercent: completedMonths >= GARDEN_MAX_BLOOMS ? 100 : (currentProgress / GARDEN_WATER_PER_BLOOM) * 100,
+    waterLevelPercent:
+      completedMonths >= GARDEN_MAX_BLOOMS ? 100 : Math.max(12, (currentProgress / GARDEN_WATER_PER_BLOOM) * 100),
+    todayTotal,
+    haohaoToday,
+    xiuqinToday,
+    remainingForNextBloom,
+    activeMonthIndex,
+    activeMonthNumber: Math.min(completedMonths + 1, GARDEN_MAX_BLOOMS),
+    dayEquivalent,
+    completedCurrentMonth: currentProgress >= GARDEN_WATER_PER_BLOOM || completedMonths >= GARDEN_MAX_BLOOMS
+  };
+}
+
+function renderGardenYearline(stats) {
+  if (!elements.gardenYearline) {
+    return;
+  }
+
+  elements.gardenYearline.innerHTML = "";
+
+  GARDEN_MONTH_LABELS.forEach((label, index) => {
+    const isComplete = index < stats.completedMonths;
+    const isCurrent = index === stats.activeMonthIndex && stats.completedMonths < GARDEN_MAX_BLOOMS;
+    const miniWaterLevel = isComplete ? 100 : isCurrent ? Math.max(10, stats.progressPercent) : 10;
+    const month = document.createElement("div");
+    month.className = "garden-mini-month";
+    month.classList.toggle("is-complete", isComplete);
+    month.classList.toggle("is-current", isCurrent);
+    month.innerHTML = `
+      <span class="garden-mini-month-name">${label}</span>
+      <div class="garden-mini-bottle">
+        <div class="garden-mini-bottle-mouth"></div>
+        <div class="garden-mini-fruit${isComplete ? " is-on" : ""}">
+          <span class="garden-fruit-stem"></span>
+          <span class="garden-fruit-leaf left"></span>
+          <span class="garden-fruit-leaf right"></span>
+          <span class="garden-fruit-berry left"></span>
+          <span class="garden-fruit-berry right"></span>
+          <span class="garden-fruit-spark"></span>
+        </div>
+        <div class="garden-mini-bottle-neck"></div>
+        <div class="garden-mini-bottle-body">
+          <div class="garden-mini-bottle-water" style="height: ${miniWaterLevel}%"></div>
+        </div>
+        <div class="garden-mini-bottle-base"></div>
+      </div>
+      <span class="garden-mini-month-note">${GARDEN_PHRASES[index]}</span>
+    `;
+    elements.gardenYearline.append(month);
+  });
+}
+
+function spawnWateringAnimation(amount = 1) {
+  if (!elements.gardenWateringLayer || !elements.gardenBottle) {
+    return;
+  }
+
+  elements.gardenWateringLayer.innerHTML = "";
+  elements.gardenBottle.classList.remove("is-wiggling");
+  void elements.gardenBottle.offsetWidth;
+  elements.gardenBottle.classList.add("is-wiggling");
+
+  for (let index = 0; index < amount; index += 1) {
+    window.setTimeout(() => {
+      const drop = document.createElement("span");
+      drop.className = "water-drop";
+      drop.style.marginLeft = `${-10 + Math.random() * 20}px`;
+
+      const heart = document.createElement("span");
+      heart.className = "water-heart";
+      heart.textContent = "❤";
+      heart.style.marginLeft = `${-18 + Math.random() * 36}px`;
+
+      elements.gardenWateringLayer.append(drop, heart);
+
+      window.setTimeout(() => {
+        drop.remove();
+        heart.remove();
+      }, 1450);
+    }, index * 180);
+  }
+
+  window.setTimeout(() => {
+    elements.gardenBottle.classList.remove("is-wiggling");
+  }, amount * 180 + 1000);
+}
+
+function formatGardenDays(value) {
+  if (Number.isInteger(value)) {
+    return String(value);
+  }
+
+  if (value > 0 && value < 0.1) {
+    return "0.1";
+  }
+
+  return (Math.round(value * 10) / 10).toFixed(1);
 }
 
 function formatDateTime(value) {

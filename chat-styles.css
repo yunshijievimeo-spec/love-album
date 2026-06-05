@@ -532,18 +532,19 @@ h2 {
 
 .garden-layout {
   display: grid;
-  grid-template-columns: minmax(280px, 420px) 1fr;
+  grid-template-columns: minmax(320px, 500px) 1fr;
   gap: 1.2rem;
-  align-items: center;
+  align-items: start;
 }
 
 .garden-visual {
   position: relative;
-  min-height: 360px;
+  min-height: 500px;
   overflow: hidden;
   border-radius: 28px;
   background:
-    radial-gradient(circle at top center, rgba(255, 247, 203, 0.62), transparent 10rem),
+    radial-gradient(circle at top center, rgba(255, 231, 170, 0.74), transparent 10rem),
+    radial-gradient(circle at 18% 16%, rgba(255, 212, 220, 0.32), transparent 16rem),
     linear-gradient(180deg, rgba(245, 250, 255, 0.96), rgba(234, 245, 226, 0.95));
   border: 1px solid rgba(255, 255, 255, 0.88);
 }
@@ -553,200 +554,397 @@ h2 {
   inset: 0;
   background:
     radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.75), transparent 4rem),
-    radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.6), transparent 5rem);
+    radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.6), transparent 5rem),
+    radial-gradient(circle at 50% 18%, rgba(255, 224, 149, 0.28), transparent 8rem);
   pointer-events: none;
 }
 
-.garden-blooms {
+.garden-yearline {
   position: absolute;
-  inset: 18px 18px auto 18px;
-  display: flex;
-  flex-wrap: wrap;
+  inset: 20px 20px auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  align-items: flex-start;
-  min-height: 64px;
+  z-index: 1;
 }
 
-.bloom-dot {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+.garden-mini-month {
   position: relative;
-  background: radial-gradient(circle at center, #ffd86f 0 28%, transparent 30%);
-  box-shadow: 0 8px 16px rgba(232, 87, 114, 0.12);
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: 8px 6px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10px 20px rgba(93, 69, 60, 0.05);
 }
 
-.bloom-dot::before,
-.bloom-dot::after {
+.garden-mini-month.is-current {
+  background: rgba(255, 246, 247, 0.86);
+  border-color: rgba(233, 138, 160, 0.28);
+}
+
+.garden-mini-month.is-complete {
+  background: rgba(255, 252, 243, 0.88);
+}
+
+.garden-mini-month-name,
+.garden-mini-month-note {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.garden-mini-bottle {
+  position: relative;
+  width: 62px;
+  height: 72px;
+}
+
+.garden-mini-bottle-mouth,
+.garden-mini-bottle-neck,
+.garden-mini-bottle-body,
+.garden-mini-bottle-base {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1.5px solid rgba(255, 255, 255, 0.88);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.14));
+}
+
+.garden-mini-bottle-mouth {
+  top: 2px;
+  width: 26px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.garden-mini-bottle-neck {
+  top: 6px;
+  width: 18px;
+  height: 14px;
+  border-radius: 6px 6px 4px 4px;
+}
+
+.garden-mini-bottle-body {
+  top: 18px;
+  width: 42px;
+  height: 40px;
+  border-radius: 12px 12px 14px 14px;
+  overflow: hidden;
+}
+
+.garden-mini-bottle-base {
+  bottom: 2px;
+  width: 32px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.garden-mini-bottle-water {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 10%;
+  background: linear-gradient(180deg, #9ad8ff, #5dade9);
+}
+
+.garden-mini-bottle-water::before,
+.garden-bottle-water::before {
   content: "";
   position: absolute;
-  inset: 0;
+  left: -8%;
+  right: -8%;
+  top: -10px;
+  height: 18px;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 8%, #ff8faa 0 26%, transparent 27%),
-    radial-gradient(circle at 92% 50%, #ff8faa 0 26%, transparent 27%),
-    radial-gradient(circle at 50% 92%, #ff8faa 0 26%, transparent 27%),
-    radial-gradient(circle at 8% 50%, #ff8faa 0 26%, transparent 27%);
+  background: rgba(197, 241, 255, 0.92);
+  animation: gardenWaveShift 4.4s ease-in-out infinite;
 }
 
-.garden-plant {
+.garden-mini-fruit {
   position: absolute;
   left: 50%;
-  bottom: 32px;
-  transform: translateX(-50%);
-  width: 220px;
-  height: 260px;
-}
-
-.garden-flower {
-  position: absolute;
-  left: 50%;
-  top: 18px;
-  width: 86px;
-  height: 86px;
-  transform: translateX(-50%) scale(0.35);
+  top: -4px;
+  width: 42px;
+  height: 28px;
+  transform: translateX(-50%) scale(0);
+  transform-origin: center bottom;
   opacity: 0;
-  transition: transform 0.35s ease, opacity 0.35s ease;
+  transition: transform 0.28s ease, opacity 0.28s ease;
 }
 
-.garden-flower.is-blooming {
+.garden-mini-fruit.is-on {
   transform: translateX(-50%) scale(1);
   opacity: 1;
 }
 
-.garden-sprout {
+.garden-focus {
   position: absolute;
-  left: 50%;
-  top: 44px;
-  width: 68px;
-  height: 46px;
-  transform: translateX(-50%);
-  opacity: 1;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-
-.garden-sprout.is-hidden {
-  opacity: 0;
-  transform: translateX(-50%) scale(0.85);
-}
-
-.sprout-leaf {
-  position: absolute;
-  width: 34px;
-  height: 22px;
-  border-radius: 100% 0 100% 0;
-  background: linear-gradient(180deg, #8bd07f, #5db06a);
-}
-
-.sprout-left {
-  left: 2px;
-  top: 16px;
-  transform: rotate(-22deg);
-}
-
-.sprout-right {
-  right: 2px;
-  top: 16px;
-  transform: scaleX(-1) rotate(-22deg);
-}
-
-.petal,
-.flower-core {
-  position: absolute;
-  border-radius: 999px;
-}
-
-.petal {
-  width: 34px;
-  height: 46px;
-  background: linear-gradient(180deg, #ff9cb4, #ff7996);
-}
-
-.petal-a {
-  left: 26px;
-  top: 0;
-}
-
-.petal-b {
-  left: 52px;
-  top: 22px;
-  transform: rotate(90deg);
-}
-
-.petal-c {
-  left: 26px;
-  top: 40px;
-  transform: rotate(180deg);
-}
-
-.petal-d {
-  left: 0;
-  top: 22px;
-  transform: rotate(-90deg);
-}
-
-.flower-core {
-  left: 50%;
-  top: 50%;
-  width: 28px;
-  height: 28px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle at 35% 35%, #ffe58b, #ffcb57);
+  inset: auto 0 28px;
+  height: 260px;
   z-index: 2;
 }
 
-.garden-stem {
+.garden-bottle {
   position: absolute;
   left: 50%;
-  top: 78px;
-  width: 12px;
-  height: 136px;
+  top: 0;
+  width: 220px;
+  height: 260px;
   transform: translateX(-50%);
-  border-radius: 999px;
-  background: linear-gradient(180deg, #87bf71, #4c9b5f);
 }
 
-.garden-leaf {
+.garden-bottle-mouth,
+.garden-bottle-neck,
+.garden-bottle-body,
+.garden-bottle-base {
   position: absolute;
-  top: 132px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.14));
+}
+
+.garden-bottle-mouth {
+  top: 0;
+  width: 92px;
+  height: 18px;
+  border-radius: 999px;
+  box-shadow: 0 6px 14px rgba(101, 125, 134, 0.12);
+}
+
+.garden-bottle-neck {
+  top: 12px;
   width: 64px;
-  height: 34px;
-  border-radius: 100% 0 100% 0;
-  background: linear-gradient(180deg, #8dd17f, #57ae68);
+  height: 50px;
+  border-radius: 18px 18px 10px 10px;
 }
 
-.leaf-left {
-  left: 50px;
-  transform: rotate(-28deg);
+.garden-bottle-body {
+  top: 52px;
+  width: 164px;
+  height: 168px;
+  border-radius: 40px 40px 44px 44px;
+  overflow: hidden;
 }
 
-.leaf-right {
-  right: 50px;
-  transform: scaleX(-1) rotate(-28deg);
+.garden-bottle-base {
+  bottom: 4px;
+  width: 118px;
+  height: 18px;
+  border-radius: 999px;
 }
 
-.garden-pot {
+.garden-bottle-water {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 12%;
+  background: linear-gradient(180deg, #9ad9ff, #5faee8);
+  transition: height 0.45s ease;
+}
+
+.garden-bottle-shine {
+  position: absolute;
+  left: calc(50% - 50px);
+  top: 70px;
+  width: 18px;
+  height: 122px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0));
+  transform: rotate(6deg);
+  pointer-events: none;
+}
+
+.garden-bottle-label {
+  position: absolute;
+  left: 50%;
+  top: 145px;
+  min-width: 102px;
+  min-height: 34px;
+  padding: 0.52rem 0.88rem;
+  border-radius: 999px;
+  background: rgba(255, 247, 239, 0.96);
+  box-shadow: 0 8px 14px rgba(111, 83, 74, 0.1);
+  color: #73574d;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.garden-bottle-shadow {
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 160px;
-  height: 96px;
+  width: 156px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(123, 150, 135, 0.14);
   transform: translateX(-50%);
-  border-radius: 22px 22px 30px 30px;
-  background:
-    linear-gradient(180deg, #d28f68, #b96d47);
-  box-shadow: inset 0 10px 0 rgba(255, 233, 214, 0.34);
+  filter: blur(8px);
 }
 
-.garden-pot::before {
+.garden-fruit,
+.garden-mini-fruit {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.garden-fruit {
+  top: -10px;
+  width: 146px;
+  height: 106px;
+  transform: translateX(-50%) scale(0);
+  transform-origin: center bottom;
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.garden-fruit.is-on {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+  animation: gardenFruitBob 3.2s ease-in-out infinite;
+}
+
+.garden-mini-fruit .garden-fruit-stem,
+.garden-mini-fruit .garden-fruit-leaf,
+.garden-mini-fruit .garden-fruit-berry,
+.garden-mini-fruit .garden-fruit-spark,
+.garden-fruit .garden-fruit-stem,
+.garden-fruit .garden-fruit-leaf,
+.garden-fruit .garden-fruit-berry,
+.garden-fruit .garden-fruit-spark {
+  position: absolute;
+}
+
+.garden-fruit-stem {
+  left: 50%;
+  top: 14px;
+  width: 10px;
+  height: 22px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #72b267, #4a8a4d);
+  transform: translateX(-50%);
+}
+
+.garden-fruit-leaf {
+  top: 14px;
+  width: 28px;
+  height: 16px;
+  border-radius: 100% 0 100% 0;
+  background: linear-gradient(180deg, #8fd37f, #79be71);
+}
+
+.garden-fruit-leaf.left {
+  left: 32px;
+  transform: rotate(-24deg);
+}
+
+.garden-fruit-leaf.right {
+  left: 82px;
+  transform: scaleX(-1) rotate(-24deg);
+}
+
+.garden-fruit-berry {
+  top: 32px;
+  width: 42px;
+  height: 56px;
+  border-radius: 50% 50% 48% 48%;
+  background: linear-gradient(180deg, #ff8ea2, #dc4d60);
+  box-shadow: inset -4px -6px 0 rgba(124, 23, 37, 0.15);
+}
+
+.garden-fruit-berry.left {
+  left: 30px;
+}
+
+.garden-fruit-berry.right {
+  left: 72px;
+  top: 36px;
+}
+
+.garden-fruit-spark,
+.garden-fruit-spark::before,
+.garden-fruit-spark::after {
+  border-radius: 999px;
+  background: rgba(255, 238, 188, 0.9);
+}
+
+.garden-fruit-spark {
+  left: 60px;
+  top: 48px;
+  width: 4px;
+  height: 24px;
+}
+
+.garden-fruit-spark::before,
+.garden-fruit-spark::after {
   content: "";
   position: absolute;
-  left: -8px;
-  right: -8px;
-  top: -12px;
-  height: 24px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #d89772, #bf7650);
+  left: -10px;
+  top: 10px;
+  width: 24px;
+  height: 4px;
+}
+
+.garden-mini-fruit .garden-fruit-stem {
+  top: 4px;
+  width: 6px;
+  height: 12px;
+}
+
+.garden-mini-fruit .garden-fruit-leaf {
+  top: 4px;
+  width: 12px;
+  height: 8px;
+}
+
+.garden-mini-fruit .garden-fruit-leaf.left {
+  left: 8px;
+}
+
+.garden-mini-fruit .garden-fruit-leaf.right {
+  left: 22px;
+}
+
+.garden-mini-fruit .garden-fruit-berry {
+  top: 12px;
+  width: 14px;
+  height: 18px;
+}
+
+.garden-mini-fruit .garden-fruit-berry.left {
+  left: 7px;
+}
+
+.garden-mini-fruit .garden-fruit-berry.right {
+  left: 19px;
+  top: 14px;
+}
+
+.garden-mini-fruit .garden-fruit-spark {
+  left: 19px;
+  top: 15px;
+  width: 2px;
+  height: 10px;
+}
+
+.garden-mini-fruit .garden-fruit-spark::before,
+.garden-mini-fruit .garden-fruit-spark::after {
+  left: -4px;
+  top: 4px;
+  width: 10px;
+  height: 2px;
+}
+
+.garden-watering-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .garden-panel,
@@ -795,7 +993,7 @@ h2 {
   width: 0;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #8fcf89, #ffd86f, #ff8faa);
+  background: linear-gradient(90deg, #8fd3ff, #74baf0, #5faee8);
   transition: width 0.35s ease;
 }
 
@@ -813,49 +1011,54 @@ h2 {
 }
 
 .water-drop {
-  width: 16px;
-  height: 22px;
+  width: 18px;
+  height: 28px;
   left: 50%;
-  top: 18px;
-  transform: translateX(-50%);
+  top: 72px;
   border-radius: 50% 50% 60% 60%;
-  background: linear-gradient(180deg, rgba(90, 185, 255, 0.95), rgba(132, 222, 255, 0.78));
+  background: linear-gradient(180deg, rgba(102, 197, 255, 0.96), rgba(170, 232, 255, 0.86));
+  box-shadow: 0 6px 12px rgba(89, 174, 232, 0.2);
   animation: waterDropFall 1s ease forwards;
 }
 
 .water-heart {
-  font-size: 18px;
+  font-size: 22px;
   left: 50%;
-  bottom: 126px;
-  transform: translateX(-50%);
+  top: 250px;
   color: rgba(255, 120, 154, 0.88);
+  text-shadow: 0 4px 10px rgba(236, 136, 164, 0.28);
   animation: waterHeartFloat 1.3s ease forwards;
 }
 
-.garden-plant.is-wiggling {
-  animation: plantWiggle 0.45s ease;
+.garden-bottle.is-wiggling {
+  animation: gardenBottleWiggle 0.45s ease;
 }
 
 @keyframes waterDropFall {
   0% {
     opacity: 0;
-    transform: translate(-50%, -10px) scale(0.8);
+    transform: translate(-4px, -16px) scale(0.84);
   }
 
   20% {
     opacity: 1;
   }
 
+  78% {
+    opacity: 1;
+    transform: translate(6px, 170px) scale(1);
+  }
+
   100% {
     opacity: 0;
-    transform: translate(-50%, 210px) scale(1);
+    transform: translate(10px, 190px) scale(0.92);
   }
 }
 
 @keyframes waterHeartFloat {
   0% {
     opacity: 0;
-    transform: translate(-50%, 12px) scale(0.8);
+    transform: translate(-4px, 24px) scale(0.7);
   }
 
   20% {
@@ -864,11 +1067,11 @@ h2 {
 
   100% {
     opacity: 0;
-    transform: translate(-50%, -78px) scale(1.16);
+    transform: translate(18px, -62px) scale(1.16);
   }
 }
 
-@keyframes plantWiggle {
+@keyframes gardenBottleWiggle {
   0%,
   100% {
     transform: translateX(-50%) rotate(0deg);
@@ -880,6 +1083,28 @@ h2 {
 
   75% {
     transform: translateX(-50%) rotate(3deg);
+  }
+}
+
+@keyframes gardenFruitBob {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(-3px) scale(1.02);
+  }
+}
+
+@keyframes gardenWaveShift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(8px);
   }
 }
 
@@ -924,6 +1149,19 @@ h2 {
   }
 
   .garden-visual {
-    min-height: 320px;
+    min-height: 560px;
+  }
+
+  .garden-yearline {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .garden-focus {
+    height: 290px;
+  }
+
+  .garden-bottle {
+    transform: translateX(-50%) scale(0.92);
+    transform-origin: top center;
   }
 }
