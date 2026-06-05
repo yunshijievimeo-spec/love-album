@@ -161,6 +161,7 @@ textarea:focus,
   min-height: 520px;
 }
 
+.lock-photo-hearts,
 .password-hearts {
   position: absolute;
   inset: 0;
@@ -169,11 +170,21 @@ textarea:focus,
   z-index: 4;
 }
 
+.lock-photo-heart,
 .password-heart {
   position: absolute;
   line-height: 1;
   opacity: 0;
   will-change: transform, opacity;
+}
+
+.lock-photo-heart {
+  --lock-heart-drift: 0px;
+  --lock-heart-scale: 1;
+  color: rgba(235, 114, 147, 0.5);
+  font-size: clamp(1rem, 2.5vw, 1.55rem);
+  transform: translate3d(0, 22px, 0) scale(var(--lock-heart-scale));
+  animation: lockHeartFloat linear forwards;
 }
 
 .password-heart {
@@ -940,6 +951,26 @@ textarea:focus,
   100% {
     opacity: 0;
     transform: translate3d(var(--heart-drift), -34px, 0) scale(var(--heart-scale));
+  }
+}
+
+@keyframes lockHeartFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0) scale(calc(var(--lock-heart-scale) * 0.8));
+  }
+
+  18% {
+    opacity: 0.52;
+  }
+
+  80% {
+    opacity: 0.38;
+  }
+
+  100% {
+    opacity: 0.16;
+    transform: translate3d(var(--lock-heart-drift), -220px, 0) scale(var(--lock-heart-scale));
   }
 }
 
