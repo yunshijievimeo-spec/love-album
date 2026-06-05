@@ -33,6 +33,7 @@ const elements = {
   storageMeter: document.querySelector("#storageMeter"),
   storageSummary: document.querySelector("#storageSummary"),
   loveCounter: document.querySelector(".love-counter"),
+  counterHearts: document.querySelector("#counterHearts"),
   daysTogether: document.querySelector("#daysTogether"),
   hoursTogether: document.querySelector("#hoursTogether"),
   minutesTogether: document.querySelector("#minutesTogether"),
@@ -65,6 +66,7 @@ const supabaseClient = hasSupabase
   : null;
 
 let isDaysAnimating = false;
+let heartBurstTimer = null;
 
 elements.dateInput.valueAsDate = new Date();
 if (elements.messageDateInput) elements.messageDateInput.valueAsDate = new Date();
@@ -235,6 +237,7 @@ function animateDaysTogether() {
 
   isDaysAnimating = true;
   elements.daysTogether.textContent = "0";
+  startCounterHearts();
 
   function tick(now) {
     const progress = Math.min(1, (now - animationStart) / duration);
@@ -249,6 +252,7 @@ function animateDaysTogether() {
 
     elements.daysTogether.textContent = targetDays.toString();
     isDaysAnimating = false;
+    stopCounterHearts();
   }
 
   window.requestAnimationFrame(tick);
@@ -263,6 +267,50 @@ function focusCounterIntoView() {
       block: "start"
     });
   });
+}
+
+function startCounterHearts() {
+  stopCounterHearts();
+
+  for (let index = 0; index < 4; index += 1) {
+    window.setTimeout(spawnCounterHeart, index * 120);
+  }
+
+  heartBurstTimer = window.setInterval(spawnCounterHeart, 180);
+  window.setTimeout(stopCounterHearts, 1700);
+}
+
+function stopCounterHearts() {
+  if (heartBurstTimer) {
+    window.clearInterval(heartBurstTimer);
+    heartBurstTimer = null;
+  }
+}
+
+function spawnCounterHeart() {
+  if (!elements.counterHearts) return;
+
+  const heart = document.createElement("span");
+  heart.className = "counter-heart";
+  heart.textContent = "❤";
+
+  const side = Math.random() > 0.5 ? "right" : "left";
+  const horizontalOffset = 8 + Math.random() * 30;
+  const verticalOffset = 14 + Math.random() * 72;
+  const drift = side === "left" ? -20 - Math.random() * 18 : 20 + Math.random() * 18;
+  const scale = 0.78 + Math.random() * 0.55;
+  const duration = 420 + Math.random() * 220;
+
+  heart.style[side] = `${horizontalOffset}%`;
+  heart.style.top = `${verticalOffset}%`;
+  heart.style.setProperty("--heart-drift", `${drift}px`);
+  heart.style.setProperty("--heart-scale", scale.toFixed(2));
+  heart.style.animationDuration = `${Math.round(duration)}ms`;
+
+  elements.counterHearts.append(heart);
+  window.setTimeout(() => {
+    heart.remove();
+  }, duration + 60);
 }
 
 async function saveToSupabase(file, memory) {
