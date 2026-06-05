@@ -379,7 +379,7 @@ h2 {
 .garden-sprout {
   position: absolute;
   left: 50%;
-  top: 54px;
+  top: 44px;
   width: 68px;
   height: 46px;
   transform: translateX(-50%);
@@ -402,13 +402,13 @@ h2 {
 
 .sprout-left {
   left: 2px;
-  top: 12px;
+  top: 16px;
   transform: rotate(-22deg);
 }
 
 .sprout-right {
   right: 2px;
-  top: 12px;
+  top: 16px;
   transform: scaleX(-1) rotate(-22deg);
 }
 
@@ -460,9 +460,9 @@ h2 {
 .garden-stem {
   position: absolute;
   left: 50%;
-  top: 92px;
+  top: 78px;
   width: 12px;
-  height: 122px;
+  height: 136px;
   transform: translateX(-50%);
   border-radius: 999px;
   background: linear-gradient(180deg, #87bf71, #4c9b5f);
