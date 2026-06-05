@@ -126,6 +126,97 @@
           </div>
         </article>
 
+        <article class="feature-card baby-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Nursery</p>
+              <h2>一起喂宝宝</h2>
+            </div>
+            <span id="babyStatusBadge" class="status-badge">等第一顿奶</span>
+          </div>
+
+          <p class="card-text">
+            你们一起照顾一对男宝和女宝。每次喂 50ml 奶粉，喂完会睡 3 小时；时间没到宝宝在睡觉，超过 3 小时还没喝到就会哭。每人每天最多喂 3 次，累计喂到 3000ml 就算把这一对宝宝稳稳养大啦。
+          </p>
+
+          <div class="baby-layout">
+            <div class="baby-visual">
+              <div id="babyRoom" class="baby-room is-waiting">
+                <div class="baby-room-glow"></div>
+                <div class="baby-room-stars">
+                  <span style="left: 16%; top: 18%;">·</span>
+                  <span style="left: 49%; top: 12%;">·</span>
+                  <span style="left: 78%; top: 22%;">·</span>
+                </div>
+                <div id="babyEffects" class="baby-effects"></div>
+                <div class="baby-crib left">
+                  <span class="baby-bubble sleep">Zz</span>
+                  <span class="baby-bubble cry">哇</span>
+                  <span class="baby-bubble happy">饱饱</span>
+                  <div class="baby-swaddle boy">
+                    <span class="baby-head"></span>
+                    <span class="baby-eye left"></span>
+                    <span class="baby-eye right"></span>
+                    <span class="baby-mouth"></span>
+                    <span class="baby-tear left"></span>
+                    <span class="baby-tear right"></span>
+                  </div>
+                  <span class="baby-name">男宝</span>
+                </div>
+                <div class="baby-crib right">
+                  <span class="baby-bubble sleep">Zz</span>
+                  <span class="baby-bubble cry">哇</span>
+                  <span class="baby-bubble happy">饱饱</span>
+                  <div class="baby-swaddle girl">
+                    <span class="baby-head"></span>
+                    <span class="baby-eye left"></span>
+                    <span class="baby-eye right"></span>
+                    <span class="baby-mouth"></span>
+                    <span class="baby-tear left"></span>
+                    <span class="baby-tear right"></span>
+                  </div>
+                  <span class="baby-name">女宝</span>
+                </div>
+                <div class="baby-ground"></div>
+              </div>
+            </div>
+
+            <div class="baby-panel">
+              <div class="garden-stats">
+                <div class="garden-stat">
+                  <span>累计奶量</span>
+                  <strong id="babyTotalAmount">0 / 3000ml</strong>
+                </div>
+                <div class="garden-stat">
+                  <span>号号今天</span>
+                  <strong id="babyHaohaoCount">0 / 3 次</strong>
+                </div>
+                <div class="garden-stat">
+                  <span>秀琴今天</span>
+                  <strong id="babyXiuqinCount">0 / 3 次</strong>
+                </div>
+                <div class="garden-stat">
+                  <span>本次状态</span>
+                  <strong id="babyFeedState">等第一顿奶</strong>
+                </div>
+              </div>
+
+              <div class="garden-progress">
+                <div class="garden-progress-bar">
+                  <div id="babyProgressFill" class="garden-progress-fill"></div>
+                </div>
+                <p id="babyProgressHint" class="garden-progress-hint">先喂第一顿奶吧，喝完 50ml 后宝宝会安稳睡 3 小时。</p>
+              </div>
+
+              <div class="garden-actions">
+                <button id="babyFeedButton" class="soft-button" type="button">喂 50ml 奶</button>
+              </div>
+
+              <div id="babySummary" class="info-panel"></div>
+            </div>
+          </div>
+        </article>
+
         <article class="feature-card hug-card">
           <div class="card-head">
             <div>
