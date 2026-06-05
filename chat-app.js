@@ -32,9 +32,9 @@ const syncQuestionPool = [
 
 const GARDEN_DAILY_LIMIT_PER_PERSON = 12;
 const GARDEN_DAILY_LIMIT_TOTAL = 24;
-const GARDEN_WATER_PER_BLOOM = 480;
+const GARDEN_WATER_PER_BLOOM = 720;
 const GARDEN_MAX_BLOOMS = 12;
-const GARDEN_PEOPLE = ["浩浩", "秀琴"];
+const GARDEN_PEOPLE = ["号号", "秀琴"];
 const GARDEN_MONTH_LABELS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
 const GARDEN_PHRASES = [
   "齐心协力",
@@ -144,14 +144,14 @@ function syncIdentityUi() {
 
 function normalizeIdentity(value) {
   if (value === "浩浩" || value === "鍙峰彿" || value === "号号") {
-    return "浩浩";
+    return "号号";
   }
 
   if (value === "秀琴" || value === "绉€鐞?" || value === "绉€鐞?" || value === "秀琴") {
     return "秀琴";
   }
 
-  return "浩浩";
+  return "号号";
 }
 
 function handleIdentityChange(event) {
@@ -792,14 +792,14 @@ function writeJson(key, value) {
 
 function normalizeIdentity(value) {
   if (value === "浩浩" || value === "鍙峰彿" || value === "号号") {
-    return "浩浩";
+    return "号号";
   }
 
   if (value === "秀琴" || value === "绉€鐞?" || value === "绉€鐞?" || value === "秀琴") {
     return "秀琴";
   }
 
-  return "浩浩";
+  return "号号";
 }
 
 function syncIdentityUi() {
@@ -861,11 +861,12 @@ function renderGarden() {
   elements.gardenTodayTotal.textContent = `${stats.todayTotal} / ${GARDEN_DAILY_LIMIT_TOTAL}`;
   elements.gardenHaohaoCount.textContent = `${stats.haohaoToday} / ${GARDEN_DAILY_LIMIT_PER_PERSON}`;
   elements.gardenXiuqinCount.textContent = `${stats.xiuqinToday} / ${GARDEN_DAILY_LIMIT_PER_PERSON}`;
-  elements.gardenProgressText.textContent = `${formatGardenDays(stats.dayEquivalent)} / 20 天`;
+  elements.gardenProgressText.textContent = `${formatGardenDays(stats.dayEquivalent)} / 30 天`;
   elements.gardenProgressFill.style.width = `${stats.progressPercent}%`;
 
   if (elements.gardenBottleWater) {
     elements.gardenBottleWater.style.height = `${stats.waterLevelPercent}%`;
+    elements.gardenBottleWater.classList.toggle("is-empty", stats.visibleDayCount <= 0);
   }
 
   if (elements.gardenBottleLabel) {
@@ -901,7 +902,7 @@ function renderGarden() {
     elements.gardenSummary,
     `累计养成 ${stats.completedMonths} / ${GARDEN_MAX_BLOOMS} 月，相当于 ${formatGardenDays(
       stats.totalWater / GARDEN_DAILY_LIMIT_TOTAL
-    )} / 240 天水量`,
+    )} / 360 天水量`,
     `今天还能再浇 ${remainTotal} 点，你当前身份还能再浇 ${remainMine} 点。`
   );
 }
@@ -923,14 +924,14 @@ function getGardenStats() {
     completedMonths >= GARDEN_MAX_BLOOMS ? 0 : Math.max(0, GARDEN_WATER_PER_BLOOM - currentProgress);
   const activeMonthIndex = Math.min(completedMonths, GARDEN_MAX_BLOOMS - 1);
   const dayEquivalent = currentProgress / GARDEN_DAILY_LIMIT_TOTAL;
+  const visibleDayCount = Math.floor(currentProgress / GARDEN_DAILY_LIMIT_TOTAL);
 
   return {
     totalWater: cappedTotalWater,
     completedMonths,
     currentProgress,
     progressPercent: completedMonths >= GARDEN_MAX_BLOOMS ? 100 : (currentProgress / GARDEN_WATER_PER_BLOOM) * 100,
-    waterLevelPercent:
-      completedMonths >= GARDEN_MAX_BLOOMS ? 100 : Math.max(12, (currentProgress / GARDEN_WATER_PER_BLOOM) * 100),
+    waterLevelPercent: completedMonths >= GARDEN_MAX_BLOOMS ? 100 : (visibleDayCount / 30) * 100,
     todayTotal,
     haohaoToday,
     xiuqinToday,
@@ -938,6 +939,7 @@ function getGardenStats() {
     activeMonthIndex,
     activeMonthNumber: Math.min(completedMonths + 1, GARDEN_MAX_BLOOMS),
     dayEquivalent,
+    visibleDayCount,
     completedCurrentMonth: currentProgress >= GARDEN_WATER_PER_BLOOM || completedMonths >= GARDEN_MAX_BLOOMS
   };
 }
@@ -948,15 +950,32 @@ function renderGardenYearline(stats) {
   }
 
   elements.gardenYearline.innerHTML = "";
+  const slotMap = [
+    { column: 1, row: 1 },
+    { column: 2, row: 1 },
+    { column: 3, row: 1 },
+    { column: 4, row: 1 },
+    { column: 1, row: 2 },
+    { column: 4, row: 2 },
+    { column: 1, row: 3 },
+    { column: 4, row: 3 },
+    { column: 1, row: 4 },
+    { column: 2, row: 4 },
+    { column: 3, row: 4 },
+    { column: 4, row: 4 }
+  ];
 
   GARDEN_MONTH_LABELS.forEach((label, index) => {
     const isComplete = index < stats.completedMonths;
     const isCurrent = index === stats.activeMonthIndex && stats.completedMonths < GARDEN_MAX_BLOOMS;
-    const miniWaterLevel = isComplete ? 100 : isCurrent ? Math.max(10, stats.progressPercent) : 10;
+    const miniWaterLevel = isComplete ? 100 : isCurrent ? (stats.visibleDayCount / 30) * 100 : 0;
+    const miniWaterClass = miniWaterLevel > 0 ? "garden-mini-bottle-water" : "garden-mini-bottle-water is-empty";
     const month = document.createElement("div");
     month.className = "garden-mini-month";
     month.classList.toggle("is-complete", isComplete);
     month.classList.toggle("is-current", isCurrent);
+    month.style.gridColumn = String(slotMap[index].column);
+    month.style.gridRow = String(slotMap[index].row);
     month.innerHTML = `
       <span class="garden-mini-month-name">${label}</span>
       <div class="garden-mini-bottle">
@@ -971,7 +990,7 @@ function renderGardenYearline(stats) {
         </div>
         <div class="garden-mini-bottle-neck"></div>
         <div class="garden-mini-bottle-body">
-          <div class="garden-mini-bottle-water" style="height: ${miniWaterLevel}%"></div>
+          <div class="${miniWaterClass}" style="height: ${miniWaterLevel}%"></div>
         </div>
         <div class="garden-mini-bottle-base"></div>
       </div>
@@ -1026,6 +1045,156 @@ function formatGardenDays(value) {
   }
 
   return (Math.round(value * 10) / 10).toFixed(1);
+}
+
+const GARDEN_TIMELINE_START = {
+  year: 2026,
+  month: 6,
+  day: 5
+};
+
+const GARDEN_TIMELINE_MONTHS = createGardenTimelineMonths(GARDEN_TIMELINE_START, GARDEN_MAX_BLOOMS);
+const GARDEN_TIMELINE_START_LABEL = formatGardenTimelineLabel(GARDEN_TIMELINE_MONTHS[0]);
+const GARDEN_TIMELINE_END_LABEL = formatGardenTimelineLabel(
+  GARDEN_TIMELINE_MONTHS[GARDEN_TIMELINE_MONTHS.length - 1]
+);
+
+function createGardenTimelineMonths(start, count) {
+  return Array.from({ length: count }, (_, index) => {
+    const monthOffset = start.month - 1 + index;
+    const year = start.year + Math.floor(monthOffset / 12);
+    const month = (monthOffset % 12) + 1;
+    return { year, month };
+  });
+}
+
+function formatGardenTimelineLabel(monthMeta) {
+  return `${monthMeta.year}年${monthMeta.month}月`;
+}
+
+function renderGarden() {
+  const stats = getGardenStats();
+  const activeMonth = GARDEN_TIMELINE_MONTHS[stats.activeMonthIndex];
+  const gardenIntroText = elements.gardenIntroText || document.querySelector("#gardenIntroText");
+
+  if (gardenIntroText && !elements.gardenIntroText) {
+    elements.gardenIntroText = gardenIntroText;
+  }
+
+  elements.gardenStageBadge.textContent =
+    stats.completedMonths >= GARDEN_MAX_BLOOMS
+      ? `${GARDEN_TIMELINE_END_LABEL} 已养满`
+      : `当前 ${formatGardenTimelineLabel(activeMonth)}`;
+  elements.gardenTodayTotal.textContent = `${stats.todayTotal} / ${GARDEN_DAILY_LIMIT_TOTAL}`;
+  elements.gardenHaohaoCount.textContent = `${stats.haohaoToday} / ${GARDEN_DAILY_LIMIT_PER_PERSON}`;
+  elements.gardenXiuqinCount.textContent = `${stats.xiuqinToday} / ${GARDEN_DAILY_LIMIT_PER_PERSON}`;
+  elements.gardenProgressText.textContent = `${formatGardenDays(stats.dayEquivalent)} / 30 天`;
+  elements.gardenProgressFill.style.width = `${stats.progressPercent}%`;
+
+  if (elements.gardenIntroText) {
+    elements.gardenIntroText.textContent = `这一轮从 ${GARDEN_TIMELINE_START_LABEL} 开始，一直排到 ${GARDEN_TIMELINE_END_LABEL}。每天每人最多浇 12 点，两个人一天最多 24 点；把这 24 点慢慢浇满，累计养够 30 天，这个月的瓶口就会结出一对小果子。`;
+  }
+
+  if (elements.gardenBottleWater) {
+    elements.gardenBottleWater.style.height = `${stats.waterLevelPercent}%`;
+    elements.gardenBottleWater.classList.toggle("is-empty", stats.visibleDayCount <= 0);
+  }
+
+  if (elements.gardenBottleLabel) {
+    elements.gardenBottleLabel.textContent = GARDEN_PHRASES[stats.activeMonthIndex];
+  }
+
+  if (elements.gardenFruit) {
+    elements.gardenFruit.classList.toggle("is-on", stats.completedCurrentMonth);
+  }
+
+  renderGardenYearline(stats);
+
+  const myTodayCount = state.identity === GARDEN_PEOPLE[0] ? stats.haohaoToday : stats.xiuqinToday;
+  const remainMine = Math.max(0, GARDEN_DAILY_LIMIT_PER_PERSON - myTodayCount);
+  const remainTotal = Math.max(0, GARDEN_DAILY_LIMIT_TOTAL - stats.todayTotal);
+  const canWaterOne = remainMine >= 1 && remainTotal >= 1 && stats.completedMonths < GARDEN_MAX_BLOOMS;
+  const canWaterTwo = remainMine >= 2 && remainTotal >= 2 && stats.completedMonths < GARDEN_MAX_BLOOMS;
+
+  elements.waterOneButton.disabled = !canWaterOne;
+  elements.waterTwoButton.disabled = !canWaterTwo;
+
+  if (stats.completedMonths >= GARDEN_MAX_BLOOMS) {
+    elements.gardenProgressHint.textContent = "12 个月的小果子都已经养满了，这一轮被你们照顾得很圆满。";
+  } else if (stats.todayTotal >= GARDEN_DAILY_LIMIT_TOTAL) {
+    elements.gardenProgressHint.textContent = "今天的 24 点水已经浇满了，明天继续一起把这瓶养甜。";
+  } else {
+    elements.gardenProgressHint.textContent = `离 ${formatGardenTimelineLabel(activeMonth)} 这瓶结出小果子，还差 ${formatGardenDays(
+      stats.remainingForNextBloom / GARDEN_DAILY_LIMIT_TOTAL
+    )} 天的水量。`;
+  }
+
+  renderInfoPanel(
+    elements.gardenSummary,
+    `本轮周期：${GARDEN_TIMELINE_START_LABEL} - ${GARDEN_TIMELINE_END_LABEL}，累计养成 ${stats.completedMonths} / ${GARDEN_MAX_BLOOMS} 瓶，相当于 ${formatGardenDays(
+      stats.totalWater / GARDEN_DAILY_LIMIT_TOTAL
+    )} / 360 天水量。`,
+    `今天还能再浇 ${remainTotal} 点，你当前身份还能再浇 ${remainMine} 点。`
+  );
+}
+
+function renderGardenYearline(stats) {
+  if (!elements.gardenYearline) {
+    return;
+  }
+
+  elements.gardenYearline.innerHTML = "";
+  const slotMap = [
+    { column: 1, row: 1 },
+    { column: 2, row: 1 },
+    { column: 3, row: 1 },
+    { column: 4, row: 1 },
+    { column: 1, row: 2 },
+    { column: 4, row: 2 },
+    { column: 1, row: 3 },
+    { column: 4, row: 3 },
+    { column: 1, row: 4 },
+    { column: 2, row: 4 },
+    { column: 3, row: 4 },
+    { column: 4, row: 4 }
+  ];
+
+  GARDEN_TIMELINE_MONTHS.forEach((monthMeta, index) => {
+    const isComplete = index < stats.completedMonths;
+    const isCurrent = index === stats.activeMonthIndex && stats.completedMonths < GARDEN_MAX_BLOOMS;
+    const miniWaterLevel = isComplete ? 100 : isCurrent ? (stats.visibleDayCount / 30) * 100 : 0;
+    const miniWaterClass = miniWaterLevel > 0 ? "garden-mini-bottle-water" : "garden-mini-bottle-water is-empty";
+    const month = document.createElement("div");
+    month.className = "garden-mini-month";
+    month.classList.toggle("is-complete", isComplete);
+    month.classList.toggle("is-current", isCurrent);
+    month.style.gridColumn = String(slotMap[index].column);
+    month.style.gridRow = String(slotMap[index].row);
+    month.innerHTML = `
+      <span class="garden-mini-month-name">
+        <span class="garden-mini-month-year">${monthMeta.year}</span>
+        <span class="garden-mini-month-label">${monthMeta.month}月</span>
+      </span>
+      <div class="garden-mini-bottle">
+        <div class="garden-mini-bottle-mouth"></div>
+        <div class="garden-mini-fruit${isComplete ? " is-on" : ""}">
+          <span class="garden-fruit-stem"></span>
+          <span class="garden-fruit-leaf left"></span>
+          <span class="garden-fruit-leaf right"></span>
+          <span class="garden-fruit-berry left"></span>
+          <span class="garden-fruit-berry right"></span>
+          <span class="garden-fruit-spark"></span>
+        </div>
+        <div class="garden-mini-bottle-neck"></div>
+        <div class="garden-mini-bottle-body">
+          <div class="${miniWaterClass}" style="height: ${miniWaterLevel}%"></div>
+        </div>
+        <div class="garden-mini-bottle-base"></div>
+      </div>
+      <span class="garden-mini-month-note">${GARDEN_PHRASES[index]}</span>
+    `;
+    elements.gardenYearline.append(month);
+  });
 }
 
 function formatDateTime(value) {
