@@ -603,6 +603,11 @@ function getBabyFeedStats(rows = state.babyRows) {
   const xiuqinToday = todayRows.filter((item) => normalizeIdentity(item.person) === GARDEN_PEOPLE[1]).length;
   const myTodayCount = state.identity === GARDEN_PEOPLE[0] ? haohaoToday : xiuqinToday;
   const bothDailyFull = haohaoToday >= BABY_DAILY_LIMIT_PER_PERSON && xiuqinToday >= BABY_DAILY_LIMIT_PER_PERSON;
+  const myRows = normalizedRows.filter((item) => normalizeIdentity(item.person) === state.identity);
+  const myLastRow = myRows[myRows.length - 1] || null;
+  const myLastFeedAt = myLastRow ? new Date(myLastRow.created_at || 0).getTime() : 0;
+  const myNextFeedAt = myLastFeedAt ? myLastFeedAt + BABY_FEED_INTERVAL_MS : 0;
+  const myCooldownRemaining = myNextFeedAt ? Math.max(0, myNextFeedAt - Date.now()) : 0;
   const lastRow = normalizedRows[normalizedRows.length - 1] || null;
   const lastFeedAt = lastRow ? new Date(lastRow.created_at || 0).getTime() : 0;
   const nextFeedAt = lastFeedAt ? lastFeedAt + BABY_FEED_INTERVAL_MS : 0;
@@ -611,8 +616,7 @@ function getBabyFeedStats(rows = state.babyRows) {
   const canFeed =
     totalAmount < BABY_TOTAL_TARGET &&
     myTodayCount < BABY_DAILY_LIMIT_PER_PERSON &&
-    !bothDailyFull &&
-    (!lastFeedAt || cooldownRemaining <= 0);
+    (!myLastFeedAt || myCooldownRemaining <= 0);
 
   let scene = "is-waiting";
   let statusText = "等第一顿奶";
@@ -636,8 +640,12 @@ function getBabyFeedStats(rows = state.babyRows) {
     todayRows,
     haohaoToday,
     xiuqinToday,
+    myRows,
     myTodayCount,
     bothDailyFull,
+    myLastFeedAt,
+    myNextFeedAt,
+    myCooldownRemaining,
     lastFeedAt,
     nextFeedAt,
     cooldownRemaining,
