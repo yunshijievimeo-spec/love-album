@@ -13,199 +13,148 @@
     <link rel="stylesheet" href="./chat-styles.css" />
   </head>
   <body>
-    <main class="chat-shell">
-      <section class="intro-card">
-        <div class="intro-copy">
-          <p class="eyebrow">Private Space</p>
+    <main class="room-shell">
+      <section class="hero-card">
+        <div class="hero-copy">
+          <p class="eyebrow">Couple Space</p>
           <h1>互动小屋</h1>
-          <p class="intro-text">
-            这是你们共享的小空间，可以聊天、回答随机问题、玩猜谜，也可以轮流玩我画你猜。两个人打开同一个链接，就能看到同一份云端内容。
+          <p class="hero-text">
+            这里不再放聊天区和小游戏，改成更有仪式感的小互动。每天上来按一按、答一答、留一句话，两个人都会在同一个线上空间里看到。
           </p>
         </div>
 
-        <div class="intro-meta">
+        <div class="hero-side">
           <div class="mode-card">
-            <span>当前模式</span>
+            <span>当前状态</span>
             <strong id="modeBadge">检测中</strong>
             <small id="modeHint">正在检查云端连接</small>
           </div>
-          <div class="intro-actions">
-            <a class="soft-button" href="./index.html">返回相册</a>
-            <button id="refreshAllButton" class="soft-button ghost" type="button">刷新云端</button>
+
+          <div class="identity-card">
+            <label for="identitySelect">今天是谁打开的小屋</label>
+            <select id="identitySelect">
+              <option value="号号">号号</option>
+              <option value="秀琴">秀琴</option>
+            </select>
+            <p id="identityHint">你选择谁，默认就会以谁的身份保存。</p>
+          </div>
+
+          <div class="hero-actions">
+            <a class="soft-button ghost" href="./index.html">返回相册</a>
+            <button id="refreshAllButton" class="soft-button" type="button">刷新线上内容</button>
             <button id="clearLocalCacheButton" class="soft-button ghost" type="button">清空本机缓存</button>
           </div>
         </div>
       </section>
 
-      <section class="chat-layout">
-        <aside class="side-panel">
-          <article class="panel-card compact">
-            <p class="panel-kicker">Today</p>
-            <h2>今日心情卡</h2>
-            <form id="moodForm" class="stack-form">
-              <label>
-                今天是谁
-                <input id="moodAuthorInput" type="text" maxlength="20" placeholder="比如：我 / 宝宝" required />
-              </label>
-              <label>
-                此刻心情
-                <select id="moodSelect">
-                  <option value="想你">想你</option>
-                  <option value="开心">开心</option>
-                  <option value="困困">困困</option>
-                  <option value="想抱抱">想抱抱</option>
-                  <option value="想约会">想约会</option>
-                </select>
-              </label>
-              <label>
-                一句话
-                <textarea id="moodNoteInput" rows="3" maxlength="80" placeholder="写一句现在最想说的话"></textarea>
-              </label>
-              <button type="submit">保存心情</button>
-            </form>
-            <div id="moodCard" class="mood-card"></div>
-          </article>
-
-          <article class="panel-card compact">
-            <div class="inline-head">
-              <div>
-                <p class="panel-kicker">Mini Game</p>
-                <h2>猜谜小卡</h2>
-              </div>
-              <span id="riddleCountBadge" class="badge">0</span>
+      <section class="feature-grid">
+        <article class="feature-card hug-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">1</p>
+              <h2>今日抱抱</h2>
             </div>
+            <span id="hugStatusBadge" class="status-badge">未抱抱</span>
+          </div>
 
-            <form id="riddleForm" class="stack-form">
-              <label>
-                出题人
-                <input id="riddleAuthorInput" type="text" maxlength="20" placeholder="比如：宝宝" required />
-              </label>
-              <label>
-                谜题
-                <textarea id="riddleQuestionInput" rows="3" maxlength="120" placeholder="写一个有趣的小谜题" required></textarea>
-              </label>
-              <label>
-                答案
-                <input id="riddleAnswerInput" type="text" maxlength="40" placeholder="把答案先藏起来" required />
-              </label>
-              <button type="submit">发布谜题</button>
-            </form>
-            <div id="riddleList" class="riddle-list"></div>
-          </article>
+          <p class="card-text">今天想先给对方一个线上抱抱。按一下就会留下一次今天的抱抱记录。</p>
 
-          <article class="panel-card compact">
-            <div class="inline-head">
-              <div>
-                <p class="panel-kicker">Random Prompt</p>
-                <h2>随机问题卡</h2>
-              </div>
-              <button id="nextPromptButton" class="tiny-button" type="button">换一题</button>
+          <button id="hugButton" class="soft-button" type="button">抱一下</button>
+          <div id="hugSummary" class="info-panel"></div>
+        </article>
+
+        <article class="feature-card lamp-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">2</p>
+              <h2>晚安灯</h2>
             </div>
+            <span id="lampStatusBadge" class="status-badge">还没亮</span>
+          </div>
 
-            <div class="prompt-card">
-              <strong id="promptQuestionText">还没有问题</strong>
-              <p id="promptHintText">点一下按钮，生成一题属于你们这轮的共享问题。</p>
+          <p class="card-text">睡前把小灯点亮。两个人谁先按，线上都会显示今晚的灯已经亮了。</p>
+
+          <button id="lampButton" class="soft-button" type="button">点亮晚安灯</button>
+          <div id="lampSummary" class="info-panel"></div>
+        </article>
+
+        <article class="feature-card score-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">3</p>
+              <h2>今日想你值</h2>
             </div>
+            <span id="scoreStatusBadge" class="status-badge">待填写</span>
+          </div>
 
-            <form id="promptAnswerForm" class="stack-form">
-              <label>
-                谁来回答
-                <input id="promptAuthorInput" type="text" maxlength="20" placeholder="你的名字" required />
-              </label>
-              <label>
-                你的回答
-                <textarea id="promptAnswerInput" rows="3" maxlength="200" placeholder="认真一点也可以，撒娇一点也可以" required></textarea>
-              </label>
-              <button type="submit">保存回答</button>
-            </form>
+          <p class="card-text">给今天的想念打个分，从 1 到 100 都可以。纯文字保存，几乎不占空间。</p>
 
-            <div id="promptAnswers" class="answer-list"></div>
-          </article>
-        </aside>
-
-        <section class="main-panel">
-          <article class="panel-card chat-card">
-            <div class="panel-head">
-              <div>
-                <p class="panel-kicker">Chat</p>
-                <h2>聊天区</h2>
-              </div>
-              <span id="messageCountBadge" class="badge">0</span>
+          <form id="scoreForm" class="stack-form">
+            <label>
+              今天想你几分
+              <input id="scoreInput" type="range" min="1" max="100" value="88" />
+            </label>
+            <div class="range-row">
+              <strong id="scorePreview">88 分</strong>
+              <button type="submit" class="soft-button">保存分数</button>
             </div>
+          </form>
+          <div id="scoreSummary" class="info-panel"></div>
+        </article>
 
-            <div id="chatStream" class="chat-stream" aria-live="polite"></div>
-
-            <form id="chatForm" class="chat-form">
-              <input id="chatAuthorInput" type="text" maxlength="20" placeholder="谁发的" required />
-              <textarea id="chatTextInput" rows="2" maxlength="200" placeholder="发一句悄悄话..." required></textarea>
-              <button type="submit">发送</button>
-            </form>
-          </article>
-
-          <article class="panel-card draw-card">
-            <div class="panel-head">
-              <div>
-                <p class="panel-kicker">Draw & Guess</p>
-                <h2>我画你猜</h2>
-              </div>
-              <span id="drawRoundBadge" class="badge">第 0 轮</span>
+        <article class="feature-card sync-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">5</p>
+              <h2>今日默契题</h2>
             </div>
+            <span id="syncStatusBadge" class="status-badge">新的一题</span>
+          </div>
 
-            <form id="drawRoundForm" class="draw-round-form">
-              <input id="drawRoundAuthorInput" type="text" maxlength="20" placeholder="这一轮谁来画" required />
-              <input id="drawRoundPromptInput" type="text" maxlength="30" placeholder="词语或成语" required />
-              <button id="randomDrawPromptButton" class="soft-button ghost" type="button">随机题目</button>
-              <button type="submit">开始下一轮</button>
-            </form>
+          <p id="syncQuestionText" class="question-text">正在准备今天的小问题...</p>
+          <p id="syncHintText" class="card-text">两个人分别作答，看看今天的默契是不是又提高了。</p>
 
-            <div class="draw-round-meta">
-              <div>
-                <span>当前画手</span>
-                <strong id="drawRoundAuthorText">还没有开始</strong>
-              </div>
-              <div>
-                <span>本轮题目</span>
-                <strong id="drawRoundPromptText">先创建第一轮</strong>
-                <button id="toggleDrawPromptButton" class="tiny-button ghost" type="button">显示 / 隐藏</button>
-              </div>
+          <form id="syncAnswerForm" class="stack-form">
+            <label>
+              你的答案
+              <input id="syncAnswerInput" type="text" maxlength="60" placeholder="比如：一起散步、吃火锅、抱抱" required />
+            </label>
+            <div class="button-row">
+              <button type="submit" class="soft-button">提交答案</button>
+              <button id="nextQuestionButton" type="button" class="soft-button ghost">换一题</button>
             </div>
+          </form>
+          <div id="syncAnswers" class="answer-list"></div>
+        </article>
 
-            <div class="draw-tools">
-              <input id="brushColorInput" type="color" value="#ff6b81" aria-label="Brush color" />
-              <input id="brushSizeInput" type="range" min="2" max="18" value="6" aria-label="Brush size" />
-              <button id="clearCanvasButton" class="soft-button ghost" type="button">清空画板</button>
-              <button id="saveCanvasButton" class="soft-button" type="button">上传画作</button>
+        <article class="feature-card capsule-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">7</p>
+              <h2>小纸条胶囊</h2>
             </div>
+            <span class="status-badge">悄悄话</span>
+          </div>
 
-            <canvas id="drawCanvas" width="960" height="420"></canvas>
-            <p class="draw-hint">
-              画作会压缩后直接存进数据库，不走图片存储桶，所以会比传照片省很多空间。
-            </p>
+          <p class="card-text">留一句今天想说的话，字数短短的就够，很省空间，但很有感觉。</p>
 
-            <form id="drawGuessForm" class="stack-form draw-guess-form">
-              <label>
-                谁来猜
-                <input id="drawGuessAuthorInput" type="text" maxlength="20" placeholder="比如：宝宝" required />
-              </label>
-              <label>
-                你的猜测
-                <input id="drawGuessInput" type="text" maxlength="40" placeholder="写下你的答案" required />
-              </label>
-              <button type="submit">提交猜测</button>
-            </form>
-
-            <div id="drawGuessCard" class="guess-card"></div>
-          </article>
-        </section>
+          <form id="capsuleForm" class="stack-form">
+            <label>
+              留一句话
+              <textarea
+                id="capsuleInput"
+                rows="4"
+                maxlength="120"
+                placeholder="比如：今天也很想你，记得好好吃饭。"
+                required
+              ></textarea>
+            </label>
+            <button type="submit" class="soft-button">放进胶囊</button>
+          </form>
+          <div id="capsuleList" class="capsule-list"></div>
+        </article>
       </section>
     </main>
-
-    <template id="emptyChatTemplate">
-      <div class="empty-box">
-        <strong>还没有消息</strong>
-        <p>先发第一句“在吗，我想你了”。</p>
-      </div>
-    </template>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="./config.example.js"></script>

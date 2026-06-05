@@ -9,5 +9,10 @@ window.LOVE_ALBUM_CONFIG = {
   statusTableName: "couple_status_cards",
   riddleTableName: "couple_riddles",
   questionRoundTableName: "couple_question_rounds",
-  drawRoundTableName: "couple_draw_rounds"
+  drawRoundTableName: "couple_draw_rounds",
+  hugTableName: "couple_hugs",
+  lampTableName: "couple_goodnight_lamps",
+  scoreTableName: "couple_miss_scores",
+  syncQuestionTableName: "couple_sync_questions",
+  capsuleTableName: "couple_capsules"
 };

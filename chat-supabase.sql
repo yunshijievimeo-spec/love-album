@@ -52,12 +52,62 @@ create table if not exists public.daily_checkins (
   unique (checkin_date, person)
 );
 
+create table if not exists public.couple_hugs (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  action_date date not null,
+  person text not null,
+  unique (action_date, person)
+);
+
+create table if not exists public.couple_goodnight_lamps (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  action_date date not null,
+  person text not null,
+  unique (action_date, person)
+);
+
+create table if not exists public.couple_miss_scores (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  score_date date not null,
+  person text not null,
+  score integer not null default 88,
+  unique (score_date, person)
+);
+
+create table if not exists public.couple_sync_questions (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  question_date date not null,
+  question text not null,
+  hint text not null default '',
+  author_a text not null default '',
+  answer_a text not null default '',
+  author_b text not null default '',
+  answer_b text not null default ''
+);
+
+create table if not exists public.couple_capsules (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  person text not null,
+  content text not null
+);
+
 alter table public.couple_chat_messages enable row level security;
 alter table public.couple_status_cards enable row level security;
 alter table public.couple_riddles enable row level security;
 alter table public.couple_question_rounds enable row level security;
 alter table public.couple_draw_rounds enable row level security;
 alter table public.daily_checkins enable row level security;
+alter table public.couple_hugs enable row level security;
+alter table public.couple_goodnight_lamps enable row level security;
+alter table public.couple_miss_scores enable row level security;
+alter table public.couple_sync_questions enable row level security;
+alter table public.couple_capsules enable row level security;
 
 drop policy if exists "Anyone can read couple_chat_messages" on public.couple_chat_messages;
 create policy "Anyone can read couple_chat_messages"
@@ -206,5 +256,130 @@ with check (true);
 drop policy if exists "Anyone can delete daily_checkins" on public.daily_checkins;
 create policy "Anyone can delete daily_checkins"
 on public.daily_checkins for delete
+to anon
+using (true);
+
+drop policy if exists "Anyone can read couple_hugs" on public.couple_hugs;
+create policy "Anyone can read couple_hugs"
+on public.couple_hugs for select
+to anon
+using (true);
+
+drop policy if exists "Anyone can insert couple_hugs" on public.couple_hugs;
+create policy "Anyone can insert couple_hugs"
+on public.couple_hugs for insert
+to anon
+with check (true);
+
+drop policy if exists "Anyone can update couple_hugs" on public.couple_hugs;
+create policy "Anyone can update couple_hugs"
+on public.couple_hugs for update
+to anon
+using (true)
+with check (true);
+
+drop policy if exists "Anyone can delete couple_hugs" on public.couple_hugs;
+create policy "Anyone can delete couple_hugs"
+on public.couple_hugs for delete
+to anon
+using (true);
+
+drop policy if exists "Anyone can read couple_goodnight_lamps" on public.couple_goodnight_lamps;
+create policy "Anyone can read couple_goodnight_lamps"
+on public.couple_goodnight_lamps for select
+to anon
+using (true);
+
+drop policy if exists "Anyone can insert couple_goodnight_lamps" on public.couple_goodnight_lamps;
+create policy "Anyone can insert couple_goodnight_lamps"
+on public.couple_goodnight_lamps for insert
+to anon
+with check (true);
+
+drop policy if exists "Anyone can update couple_goodnight_lamps" on public.couple_goodnight_lamps;
+create policy "Anyone can update couple_goodnight_lamps"
+on public.couple_goodnight_lamps for update
+to anon
+using (true)
+with check (true);
+
+drop policy if exists "Anyone can delete couple_goodnight_lamps" on public.couple_goodnight_lamps;
+create policy "Anyone can delete couple_goodnight_lamps"
+on public.couple_goodnight_lamps for delete
+to anon
+using (true);
+
+drop policy if exists "Anyone can read couple_miss_scores" on public.couple_miss_scores;
+create policy "Anyone can read couple_miss_scores"
+on public.couple_miss_scores for select
+to anon
+using (true);
+
+drop policy if exists "Anyone can insert couple_miss_scores" on public.couple_miss_scores;
+create policy "Anyone can insert couple_miss_scores"
+on public.couple_miss_scores for insert
+to anon
+with check (true);
+
+drop policy if exists "Anyone can update couple_miss_scores" on public.couple_miss_scores;
+create policy "Anyone can update couple_miss_scores"
+on public.couple_miss_scores for update
+to anon
+using (true)
+with check (true);
+
+drop policy if exists "Anyone can delete couple_miss_scores" on public.couple_miss_scores;
+create policy "Anyone can delete couple_miss_scores"
+on public.couple_miss_scores for delete
+to anon
+using (true);
+
+drop policy if exists "Anyone can read couple_sync_questions" on public.couple_sync_questions;
+create policy "Anyone can read couple_sync_questions"
+on public.couple_sync_questions for select
+to anon
+using (true);
+
+drop policy if exists "Anyone can insert couple_sync_questions" on public.couple_sync_questions;
+create policy "Anyone can insert couple_sync_questions"
+on public.couple_sync_questions for insert
+to anon
+with check (true);
+
+drop policy if exists "Anyone can update couple_sync_questions" on public.couple_sync_questions;
+create policy "Anyone can update couple_sync_questions"
+on public.couple_sync_questions for update
+to anon
+using (true)
+with check (true);
+
+drop policy if exists "Anyone can delete couple_sync_questions" on public.couple_sync_questions;
+create policy "Anyone can delete couple_sync_questions"
+on public.couple_sync_questions for delete
+to anon
+using (true);
+
+drop policy if exists "Anyone can read couple_capsules" on public.couple_capsules;
+create policy "Anyone can read couple_capsules"
+on public.couple_capsules for select
+to anon
+using (true);
+
+drop policy if exists "Anyone can insert couple_capsules" on public.couple_capsules;
+create policy "Anyone can insert couple_capsules"
+on public.couple_capsules for insert
+to anon
+with check (true);
+
+drop policy if exists "Anyone can update couple_capsules" on public.couple_capsules;
+create policy "Anyone can update couple_capsules"
+on public.couple_capsules for update
+to anon
+using (true)
+with check (true);
+
+drop policy if exists "Anyone can delete couple_capsules" on public.couple_capsules;
+create policy "Anyone can delete couple_capsules"
+on public.couple_capsules for delete
 to anon
 using (true);
