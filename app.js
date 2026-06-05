@@ -32,6 +32,7 @@ const elements = {
   storageUsed: document.querySelector("#storageUsed"),
   storageMeter: document.querySelector("#storageMeter"),
   storageSummary: document.querySelector("#storageSummary"),
+  loveCounter: document.querySelector(".love-counter"),
   daysTogether: document.querySelector("#daysTogether"),
   hoursTogether: document.querySelector("#hoursTogether"),
   minutesTogether: document.querySelector("#minutesTogether"),
@@ -62,6 +63,8 @@ const hasSupabase =
 const supabaseClient = hasSupabase
   ? window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey)
   : null;
+
+let isDaysAnimating = false;
 
 elements.dateInput.valueAsDate = new Date();
 if (elements.messageDateInput) elements.messageDateInput.valueAsDate = new Date();
@@ -157,6 +160,8 @@ async function unlock() {
   elements.lockScreen.hidden = true;
   elements.albumApp.hidden = false;
   await Promise.all([loadMemories(), loadMessages()]);
+  animateDaysTogether();
+  focusCounterIntoView();
 }
 
 function restoreSession() {
@@ -201,7 +206,9 @@ function updateDaysTogether() {
   const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const dayMs = 24 * 60 * 60 * 1000;
   const days = Math.max(1, Math.floor((current - start) / dayMs) + 1);
-  elements.daysTogether.textContent = days.toString();
+  if (!isDaysAnimating) {
+    elements.daysTogether.textContent = days.toString();
+  }
 
   const diffMs = Math.max(0, today.getTime() - metDate.getTime());
   const totalSeconds = Math.floor(diffMs / 1000);
@@ -215,6 +222,47 @@ function updateDaysTogether() {
 
   elements.metDateText.dateTime = formatDateValue(start);
   elements.metDateText.textContent = formatCounterDate(start);
+}
+
+function animateDaysTogether() {
+  const today = new Date();
+  const start = new Date(metDate.getFullYear(), metDate.getMonth(), metDate.getDate());
+  const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dayMs = 24 * 60 * 60 * 1000;
+  const targetDays = Math.max(1, Math.floor((current - start) / dayMs) + 1);
+  const duration = 1400;
+  const animationStart = performance.now();
+
+  isDaysAnimating = true;
+  elements.daysTogether.textContent = "0";
+
+  function tick(now) {
+    const progress = Math.min(1, (now - animationStart) / duration);
+    const easedProgress = 1 - Math.pow(1 - progress, 3);
+    const currentValue = Math.max(0, Math.round(targetDays * easedProgress));
+    elements.daysTogether.textContent = currentValue.toString();
+
+    if (progress < 1) {
+      window.requestAnimationFrame(tick);
+      return;
+    }
+
+    elements.daysTogether.textContent = targetDays.toString();
+    isDaysAnimating = false;
+  }
+
+  window.requestAnimationFrame(tick);
+}
+
+function focusCounterIntoView() {
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+  window.requestAnimationFrame(() => {
+    elements.loveCounter?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
 }
 
 async function saveToSupabase(file, memory) {
