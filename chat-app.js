@@ -1047,6 +1047,168 @@ function formatGardenDays(value) {
   return (Math.round(value * 10) / 10).toFixed(1);
 }
 
+const SCORE_DAILY_LIMIT = 3;
+const SCORE_COOLDOWN_MS = 3 * 60 * 60 * 1000;
+
+function getScoreSubmitButton() {
+  return elements.scoreForm?.querySelector('button[type="submit"]') || null;
+}
+
+function getScoreRowTime(row) {
+  return new Date(row.updated_at || row.created_at || 0).getTime();
+}
+
+function getTodayScoreRows(rows, person = "") {
+  const today = getTodayKey();
+  return rows
+    .filter((item) => item.score_date === today)
+    .filter((item) => !person || normalizeIdentity(item.person) === person)
+    .sort((left, right) => getScoreRowTime(left) - getScoreRowTime(right));
+}
+
+function getScoreAttemptState(rows, person = state.identity) {
+  const mineRows = getTodayScoreRows(rows, person);
+  const attempts = mineRows.length;
+  const nextAttempt = Math.min(attempts + 1, SCORE_DAILY_LIMIT);
+  const lastRow = mineRows[attempts - 1] || null;
+  const lastTime = lastRow ? getScoreRowTime(lastRow) : 0;
+  const cooldownRemaining = lastTime ? Math.max(0, SCORE_COOLDOWN_MS - (Date.now() - lastTime)) : 0;
+  const canSubmit = attempts < SCORE_DAILY_LIMIT && cooldownRemaining <= 0;
+
+  return {
+    mineRows,
+    attempts,
+    nextAttempt,
+    cooldownRemaining,
+    canSubmit,
+    totalScore: mineRows.reduce((sum, item) => sum + Number(item.score || 0), 0)
+  };
+}
+
+function formatScoreCooldown(ms) {
+  const totalMinutes = Math.ceil(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours && minutes) {
+    return `${hours} 小时 ${minutes} 分钟`;
+  }
+
+  if (hours) {
+    return `${hours} 小时`;
+  }
+
+  return `${Math.max(1, minutes)} 分钟`;
+}
+
+function syncScorePreview() {
+  const attemptLabel = elements.scoreForm?.dataset.attemptLabel || "X1";
+  elements.scorePreview.textContent = `${elements.scoreInput.value} 分 ${attemptLabel}`;
+}
+
+async function handleScoreSubmit(event) {
+  event.preventDefault();
+
+  const rows = await fetchRows(tableNames.scores, localKeys.scores, {
+    orderColumn: "created_at",
+    ascending: false,
+    limit: 120
+  });
+  const scoreState = getScoreAttemptState(rows);
+
+  if (!scoreState.canSubmit) {
+    await hydrateScores();
+    return;
+  }
+
+  await insertRow(tableNames.scores, localKeys.scores, {
+    id: crypto.randomUUID(),
+    person: state.identity,
+    score_date: getTodayKey(),
+    score: Number(elements.scoreInput.value),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  });
+
+  await hydrateScores();
+}
+
+async function hydrateScores() {
+  const rows = await fetchRows(tableNames.scores, localKeys.scores, {
+    orderColumn: "created_at",
+    ascending: false,
+    limit: 120
+  });
+  const todayRows = getTodayScoreRows(rows);
+  const scoreState = getScoreAttemptState(rows);
+  const scoreButton = getScoreSubmitButton();
+  const attemptLabel = `X${scoreState.nextAttempt}`;
+
+  if (elements.scoreForm) {
+    elements.scoreForm.dataset.attemptLabel = attemptLabel;
+  }
+
+  if (scoreState.mineRows.length) {
+    const latestMine = scoreState.mineRows[scoreState.mineRows.length - 1];
+    elements.scoreInput.value = `${latestMine.score}`;
+  }
+
+  elements.scoreInput.disabled = !scoreState.canSubmit;
+  if (scoreButton) {
+    scoreButton.disabled = !scoreState.canSubmit;
+    scoreButton.textContent = scoreState.attempts >= SCORE_DAILY_LIMIT ? "今天想满了" : `保存 ${attemptLabel}`;
+  }
+
+  if (scoreState.attempts >= SCORE_DAILY_LIMIT) {
+    elements.scoreStatusBadge.textContent = "今天满格";
+  } else if (scoreState.cooldownRemaining > 0) {
+    elements.scoreStatusBadge.textContent = `${attemptLabel} 冷却中`;
+  } else {
+    elements.scoreStatusBadge.textContent = `${attemptLabel} 可记录`;
+  }
+
+  syncScorePreview();
+
+  if (!todayRows.length) {
+    renderInfoPanel(elements.scoreSummary, "今天还没有想你值。", "每人今天最多 3 次，每次要间隔 3 小时。");
+    return;
+  }
+
+  const groupedRows = new Map();
+  todayRows.forEach((item) => {
+    const person = normalizeIdentity(item.person);
+    const bucket = groupedRows.get(person) || [];
+    bucket.push(item);
+    groupedRows.set(person, bucket);
+  });
+
+  const wrap = document.createElement("div");
+  GARDEN_PEOPLE.filter((person) => groupedRows.has(person)).forEach((person) => {
+    const personRows = groupedRows.get(person);
+    const total = personRows.reduce((sum, item) => sum + Number(item.score || 0), 0);
+    const line = document.createElement("p");
+    line.innerHTML = `<strong>${person}</strong>：${total} 分（${personRows.length} 次）`;
+    wrap.append(line);
+
+    const detail = document.createElement("p");
+    detail.textContent = personRows.map((item, index) => `X${index + 1} ${item.score}分`).join(" / ");
+    wrap.append(detail);
+  });
+
+  const hint = document.createElement("p");
+  if (scoreState.attempts >= SCORE_DAILY_LIMIT) {
+    hint.textContent = `你今天已经想满 3 次了，累计 ${scoreState.totalScore} 分。`;
+  } else if (scoreState.cooldownRemaining > 0) {
+    hint.textContent = `${attemptLabel} 还要再等 ${formatScoreCooldown(scoreState.cooldownRemaining)}。`;
+  } else {
+    hint.textContent = `${attemptLabel} 已经可以继续记录了，你今天已累计 ${scoreState.totalScore} 分。`;
+  }
+  wrap.prepend(hint);
+
+  elements.scoreSummary.innerHTML = "";
+  elements.scoreSummary.append(wrap);
+}
+
 const GARDEN_TIMELINE_START = {
   year: 2026,
   month: 6,
