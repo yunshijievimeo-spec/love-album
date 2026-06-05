@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>互动小屋</title>
+    <title>爱的小屋</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,10 +17,34 @@
       <section class="hero-card">
         <div class="hero-copy">
           <p class="eyebrow">Couple Space</p>
-          <h1>互动小屋</h1>
-          <p class="hero-text">
-            这里不再放聊天区和小游戏，改成更有仪式感的小互动。每天上来按一按、答一答、留一句话，两个人都会在同一个线上空间里看见。
-          </p>
+          <h1>爱的小屋</h1>
+          <div class="hero-board" id="heroBoard">
+            <div class="hero-board-head">
+              <strong>今日动态看板</strong>
+              <span id="heroBoardStamp">正在同步...</span>
+            </div>
+            <div class="hero-board-stats">
+              <article class="hero-board-stat">
+                <span>喂奶</span>
+                <strong id="heroBoardBabyCount">0 次</strong>
+              </article>
+              <article class="hero-board-stat">
+                <span>浇花</span>
+                <strong id="heroBoardWaterCount">0 点</strong>
+              </article>
+              <article class="hero-board-stat">
+                <span>留言</span>
+                <strong id="heroBoardCapsuleCount">0 条</strong>
+              </article>
+              <article class="hero-board-stat">
+                <span>拥抱</span>
+                <strong id="heroBoardHugCount">0 次</strong>
+              </article>
+            </div>
+            <div id="heroBoardList" class="hero-board-list">
+              <p class="hero-board-empty">今天还没有新动态，等你们来点亮第一条。</p>
+            </div>
+          </div>
         </div>
 
         <div class="hero-side">
@@ -361,5 +385,6 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="./config.example.js"></script>
     <script src="./chat-app.js"></script>
+    <script src="./hero-board.js"></script>
   </body>
 </html>

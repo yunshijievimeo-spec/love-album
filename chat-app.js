@@ -72,6 +72,11 @@ state.identity = normalizeIdentity(state.identity);
 const elements = {
   modeBadge: document.querySelector("#modeBadge"),
   modeHint: document.querySelector("#modeHint"),
+  heroBoardStamp: document.querySelector("#heroBoardStamp"),
+  heroBoardBabyCount: document.querySelector("#heroBoardBabyCount"),
+  heroBoardWaterCount: document.querySelector("#heroBoardWaterCount"),
+  heroBoardCapsuleCount: document.querySelector("#heroBoardCapsuleCount"),
+  heroBoardList: document.querySelector("#heroBoardList"),
   identitySelect: document.querySelector("#identitySelect"),
   identityHint: document.querySelector("#identityHint"),
   refreshAllButton: document.querySelector("#refreshAllButton"),
@@ -201,7 +206,8 @@ async function refreshAll() {
     hydrateSyncRound(),
     hydrateCapsules(),
     hydrateGarden(),
-    hydrateBabyFeeds()
+    hydrateBabyFeeds(),
+    typeof hydrateHeroBoard === "function" ? hydrateHeroBoard() : Promise.resolve()
   ]);
 }
 
