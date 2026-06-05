@@ -51,11 +51,9 @@ const elements = {
   refreshAllButton: document.querySelector("#refreshAllButton"),
   clearLocalCacheButton: document.querySelector("#clearLocalCacheButton"),
   hugButton: document.querySelector("#hugButton"),
-  hugStatusBadge: document.querySelector("#hugStatusBadge"),
-  hugSummary: document.querySelector("#hugSummary"),
+  hugScene: document.querySelector("#hugScene"),
   lampButton: document.querySelector("#lampButton"),
-  lampStatusBadge: document.querySelector("#lampStatusBadge"),
-  lampSummary: document.querySelector("#lampSummary"),
+  lampScene: document.querySelector("#lampScene"),
   scoreForm: document.querySelector("#scoreForm"),
   scoreInput: document.querySelector("#scoreInput"),
   scorePreview: document.querySelector("#scorePreview"),
@@ -188,18 +186,12 @@ async function hydrateHugs() {
 
   const todayRows = rows.filter((item) => item.action_date === today);
   const mine = todayRows.find((item) => item.person === state.identity);
+  const bothDone = hasBothPeople(todayRows);
 
-  elements.hugStatusBadge.textContent = mine ? "今天抱过了" : "未抱抱";
   elements.hugButton.textContent = mine ? "今天已经抱抱" : "抱一下";
   elements.hugButton.disabled = Boolean(mine);
-
-  if (!todayRows.length) {
-    renderInfoPanel(elements.hugSummary, "今天还没有人来抱抱。");
-    return;
-  }
-
-  const names = todayRows.map((item) => item.person).join("、");
-  renderInfoPanel(elements.hugSummary, `今天已经送出抱抱：${names}`, `记录时间：${formatDateTime(todayRows[0].created_at)}`);
+  elements.hugScene.classList.toggle("is-on", bothDone);
+  elements.hugScene.classList.toggle("is-off", !bothDone);
 }
 
 async function handleLampSubmit() {
@@ -230,18 +222,12 @@ async function hydrateLamps() {
 
   const todayRows = rows.filter((item) => item.action_date === today);
   const mine = todayRows.find((item) => item.person === state.identity);
+  const bothDone = hasBothPeople(todayRows);
 
-  elements.lampStatusBadge.textContent = todayRows.length ? "今晚亮着" : "还没亮";
   elements.lampButton.textContent = mine ? "今晚已经点亮" : "点亮晚安灯";
   elements.lampButton.disabled = Boolean(mine);
-
-  if (!todayRows.length) {
-    renderInfoPanel(elements.lampSummary, "今晚的小灯还没有亮。");
-    return;
-  }
-
-  const names = todayRows.map((item) => item.person).join("、");
-  renderInfoPanel(elements.lampSummary, `今晚点灯的人：${names}`, "愿你们今晚都做个好梦。");
+  elements.lampScene.classList.toggle("is-on", bothDone);
+  elements.lampScene.classList.toggle("is-off", !bothDone);
 }
 
 async function handleScoreSubmit(event) {
@@ -654,6 +640,11 @@ function buildDualAnswerUpdate(round, author, answer) {
 
 function normalizeAnswer(value) {
   return String(value || "").trim().replace(/\s+/g, "").toLowerCase();
+}
+
+function hasBothPeople(rows) {
+  const names = new Set(rows.map((item) => item.person));
+  return names.has("号号") && names.has("秀琴");
 }
 
 function pickRandomQuestion(currentQuestion) {
