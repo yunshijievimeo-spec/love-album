@@ -366,14 +366,50 @@ h2 {
   top: 18px;
   width: 86px;
   height: 86px;
-  transform: translateX(-50%) scale(0.72);
-  opacity: 0.62;
+  transform: translateX(-50%) scale(0.35);
+  opacity: 0;
   transition: transform 0.35s ease, opacity 0.35s ease;
 }
 
 .garden-flower.is-blooming {
   transform: translateX(-50%) scale(1);
   opacity: 1;
+}
+
+.garden-sprout {
+  position: absolute;
+  left: 50%;
+  top: 54px;
+  width: 68px;
+  height: 46px;
+  transform: translateX(-50%);
+  opacity: 1;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.garden-sprout.is-hidden {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.85);
+}
+
+.sprout-leaf {
+  position: absolute;
+  width: 34px;
+  height: 22px;
+  border-radius: 100% 0 100% 0;
+  background: linear-gradient(180deg, #8bd07f, #5db06a);
+}
+
+.sprout-left {
+  left: 2px;
+  top: 12px;
+  transform: rotate(-22deg);
+}
+
+.sprout-right {
+  right: 2px;
+  top: 12px;
+  transform: scaleX(-1) rotate(-22deg);
 }
 
 .petal,

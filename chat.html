@@ -48,6 +48,79 @@
       </section>
 
       <section class="feature-grid">
+        <article class="feature-card garden-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Garden</p>
+              <h2>一起养花</h2>
+            </div>
+            <span id="gardenStageBadge" class="status-badge">第 0 / 12 朵</span>
+          </div>
+
+          <p class="card-text">
+            先从一株小花苗开始。每天每人最多浇 12 次，两个人一天最多 24 次。把当天的 24 次浇满，坚持养满 20 天，才会真正开出第 1 朵花。
+          </p>
+
+          <div class="garden-layout">
+            <div class="garden-visual" id="gardenVisual">
+              <div class="garden-sky"></div>
+              <div class="garden-blooms" id="gardenBlooms"></div>
+              <div class="garden-plant">
+                <div class="garden-sprout" id="gardenSprout">
+                  <span class="sprout-leaf sprout-left"></span>
+                  <span class="sprout-leaf sprout-right"></span>
+                </div>
+                <div class="garden-flower" id="gardenFlower">
+                  <span class="petal petal-a"></span>
+                  <span class="petal petal-b"></span>
+                  <span class="petal petal-c"></span>
+                  <span class="petal petal-d"></span>
+                  <span class="flower-core"></span>
+                </div>
+                <div class="garden-stem"></div>
+                <div class="garden-leaf leaf-left"></div>
+                <div class="garden-leaf leaf-right"></div>
+                <div class="garden-pot"></div>
+              </div>
+            </div>
+
+            <div class="garden-panel">
+              <div class="garden-stats">
+                <div class="garden-stat">
+                  <span>今日总浇水</span>
+                  <strong id="gardenTodayTotal">0 / 24</strong>
+                </div>
+                <div class="garden-stat">
+                  <span>号号今天</span>
+                  <strong id="gardenHaohaoCount">0 / 12</strong>
+                </div>
+                <div class="garden-stat">
+                  <span>秀琴今天</span>
+                  <strong id="gardenXiuqinCount">0 / 12</strong>
+                </div>
+                <div class="garden-stat">
+                  <span>这一朵进度</span>
+                  <strong id="gardenProgressText">0 / 480</strong>
+                </div>
+              </div>
+
+              <div class="garden-progress">
+                <div class="garden-progress-bar">
+                  <div id="gardenProgressFill" class="garden-progress-fill"></div>
+                </div>
+                <p id="gardenProgressHint" class="garden-progress-hint">先把小花苗养大，浇满 24 次的一天越多，离开花越近。</p>
+              </div>
+
+              <div class="garden-actions">
+                <button id="waterOneButton" class="soft-button" type="button">浇 1 次水</button>
+                <button id="waterTwoButton" class="soft-button ghost" type="button">浇 2 次水</button>
+              </div>
+
+              <div id="gardenSummary" class="info-panel"></div>
+            </div>
+          </div>
+        </article>
+
         <article class="feature-card hug-card">
           <div class="card-head">
             <div>
@@ -154,74 +227,6 @@
           <div id="capsuleList" class="capsule-list"></div>
         </article>
 
-        <article class="feature-card garden-card">
-          <div class="card-head">
-            <div>
-              <p class="card-kicker">Garden</p>
-              <h2>一起养花</h2>
-            </div>
-            <span id="gardenStageBadge" class="status-badge">第 0 / 12 朵</span>
-          </div>
-
-          <p class="card-text">
-            你们共养一盆花。每天每人最多浇 12 次，两个人一天最多 24 次。满浇 20 天会开出 1 朵花，最多开满 12 朵。
-          </p>
-
-          <div class="garden-layout">
-            <div class="garden-visual" id="gardenVisual">
-              <div class="garden-sky"></div>
-              <div class="garden-blooms" id="gardenBlooms"></div>
-              <div class="garden-plant">
-                <div class="garden-flower" id="gardenFlower">
-                  <span class="petal petal-a"></span>
-                  <span class="petal petal-b"></span>
-                  <span class="petal petal-c"></span>
-                  <span class="petal petal-d"></span>
-                  <span class="flower-core"></span>
-                </div>
-                <div class="garden-stem"></div>
-                <div class="garden-leaf leaf-left"></div>
-                <div class="garden-leaf leaf-right"></div>
-                <div class="garden-pot"></div>
-              </div>
-            </div>
-
-            <div class="garden-panel">
-              <div class="garden-stats">
-                <div class="garden-stat">
-                  <span>今日总浇水</span>
-                  <strong id="gardenTodayTotal">0 / 24</strong>
-                </div>
-                <div class="garden-stat">
-                  <span>号号今天</span>
-                  <strong id="gardenHaohaoCount">0 / 12</strong>
-                </div>
-                <div class="garden-stat">
-                  <span>秀琴今天</span>
-                  <strong id="gardenXiuqinCount">0 / 12</strong>
-                </div>
-                <div class="garden-stat">
-                  <span>这一朵进度</span>
-                  <strong id="gardenProgressText">0 / 480</strong>
-                </div>
-              </div>
-
-              <div class="garden-progress">
-                <div class="garden-progress-bar">
-                  <div id="gardenProgressFill" class="garden-progress-fill"></div>
-                </div>
-                <p id="gardenProgressHint" class="garden-progress-hint">再浇一点水，这一朵花就会慢慢长大。</p>
-              </div>
-
-              <div class="garden-actions">
-                <button id="waterOneButton" class="soft-button" type="button">浇 1 次水</button>
-                <button id="waterTwoButton" class="soft-button ghost" type="button">浇 2 次水</button>
-              </div>
-
-              <div id="gardenSummary" class="info-panel"></div>
-            </div>
-          </div>
-        </article>
       </section>
     </main>
 

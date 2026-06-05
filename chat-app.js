@@ -73,6 +73,7 @@ const elements = {
   capsuleList: document.querySelector("#capsuleList"),
   gardenVisual: document.querySelector("#gardenVisual"),
   gardenBlooms: document.querySelector("#gardenBlooms"),
+  gardenSprout: document.querySelector("#gardenSprout"),
   gardenFlower: document.querySelector("#gardenFlower"),
   gardenStageBadge: document.querySelector("#gardenStageBadge"),
   gardenTodayTotal: document.querySelector("#gardenTodayTotal"),
@@ -531,7 +532,9 @@ function renderGarden() {
   elements.gardenXiuqinCount.textContent = `${stats.xiuqinToday} / ${GARDEN_DAILY_LIMIT_PER_PERSON}`;
   elements.gardenProgressText.textContent = `${stats.currentProgress} / ${GARDEN_WATER_PER_BLOOM}`;
   elements.gardenProgressFill.style.width = `${stats.progressPercent}%`;
-  elements.gardenFlower.classList.toggle("is-blooming", stats.currentProgress > 0 || stats.openBlooms > 0);
+  const hasBloomed = stats.openBlooms > 0;
+  elements.gardenFlower.classList.toggle("is-blooming", hasBloomed);
+  elements.gardenSprout.classList.toggle("is-hidden", hasBloomed);
 
   renderGardenBlooms(stats.openBlooms);
 
@@ -550,13 +553,15 @@ function renderGarden() {
   } else if (stats.todayTotal >= GARDEN_DAILY_LIMIT_TOTAL) {
     elements.gardenProgressHint.textContent = "今天的 24 次水已经浇满了，明天继续一起养。";
   } else {
-    elements.gardenProgressHint.textContent = `距离下一朵花还差 ${stats.remainingForNextBloom} 点水量。`;
+    elements.gardenProgressHint.textContent = `距离开出下一朵花还差 ${stats.remainingForNextBloom} 点水量。`;
   }
 
   renderInfoPanel(
     elements.gardenSummary,
     `累计水量：${stats.totalWater} / ${GARDEN_WATER_PER_BLOOM * GARDEN_MAX_BLOOMS}`,
-    `今天还能再浇 ${Math.max(0, remainTotal)} 次，你当前身份还能浇 ${Math.max(0, remainMine)} 次。`
+    hasBloomed
+      ? `今天还能再浇 ${Math.max(0, remainTotal)} 次，你当前身份还能浇 ${Math.max(0, remainMine)} 次。`
+      : `现在还是小花苗。今天还能再浇 ${Math.max(0, remainTotal)} 次，你当前身份还能浇 ${Math.max(0, remainMine)} 次。`
   );
 }
 
