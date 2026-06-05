@@ -110,6 +110,7 @@ h1 {
 }
 
 .password-row {
+  position: relative;
   display: flex;
   gap: 0.75rem;
 }
@@ -158,6 +159,40 @@ textarea:focus,
 .lock-photo {
   position: relative;
   min-height: 520px;
+}
+
+.lock-photo-hearts,
+.password-hearts {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lock-photo-heart,
+.password-heart {
+  position: absolute;
+  line-height: 1;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.lock-photo-heart {
+  --lock-heart-drift: 0px;
+  --lock-heart-scale: 1;
+  color: rgba(235, 114, 147, 0.5);
+  font-size: clamp(1rem, 2.5vw, 1.55rem);
+  transform: translate3d(0, 22px, 0) scale(var(--lock-heart-scale));
+  animation: lockHeartFloat linear forwards;
+}
+
+.password-heart {
+  --password-heart-drift: 0px;
+  --password-heart-scale: 1;
+  color: rgba(225, 95, 126, 0.78);
+  font-size: 0.95rem;
+  transform: translate3d(0, 8px, 0) scale(var(--password-heart-scale));
+  animation: passwordHeartPop ease-out forwards;
 }
 
 .polaroid {
@@ -909,6 +944,42 @@ textarea:focus,
   100% {
     opacity: 0;
     transform: translate3d(var(--heart-drift), -34px, 0) scale(var(--heart-scale));
+  }
+}
+
+@keyframes lockHeartFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0) scale(calc(var(--lock-heart-scale) * 0.8));
+  }
+
+  18% {
+    opacity: 0.52;
+  }
+
+  80% {
+    opacity: 0.38;
+  }
+
+  100% {
+    opacity: 0.16;
+    transform: translate3d(var(--lock-heart-drift), -220px, 0) scale(var(--lock-heart-scale));
+  }
+}
+
+@keyframes passwordHeartPop {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(calc(var(--password-heart-scale) * 0.75));
+  }
+
+  35% {
+    opacity: 0.82;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--password-heart-drift), -26px, 0) scale(var(--password-heart-scale));
   }
 }
 

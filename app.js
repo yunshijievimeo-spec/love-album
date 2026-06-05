@@ -12,6 +12,8 @@ const elements = {
   loginForm: document.querySelector("#loginForm"),
   loginError: document.querySelector("#loginError"),
   sitePassword: document.querySelector("#sitePassword"),
+  lockPhotoHearts: document.querySelector("#lockPhotoHearts"),
+  passwordHearts: document.querySelector("#passwordHearts"),
   logoutButton: document.querySelector("#logoutButton"),
   memoryForm: document.querySelector("#memoryForm"),
   editingIdInput: document.querySelector("#editingIdInput"),
@@ -67,6 +69,8 @@ const supabaseClient = hasSupabase
 
 let isDaysAnimating = false;
 let heartBurstTimer = null;
+let lockPhotoHeartsTimer = null;
+let lastPasswordLength = 0;
 
 elements.dateInput.valueAsDate = new Date();
 if (elements.messageDateInput) elements.messageDateInput.valueAsDate = new Date();
@@ -74,6 +78,7 @@ if (elements.messageDateInput) elements.messageDateInput.valueAsDate = new Date(
 updateDaysTogether();
 window.setInterval(updateDaysTogether, 1000);
 restoreSession();
+startLockPhotoHearts();
 
 elements.loginForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -89,11 +94,25 @@ elements.loginForm.addEventListener("submit", (event) => {
   elements.loginError.textContent = "密码不对，再试一次。";
 });
 
+elements.sitePassword.addEventListener("input", () => {
+  const currentLength = elements.sitePassword.value.length;
+
+  if (currentLength > lastPasswordLength) {
+    for (let index = lastPasswordLength; index < currentLength; index += 1) {
+      spawnPasswordHeart();
+    }
+  }
+
+  lastPasswordLength = currentLength;
+});
+
 elements.logoutButton.addEventListener("click", () => {
   sessionStorage.removeItem(sessionKey);
   closeLightbox();
   elements.albumApp.hidden = true;
   elements.lockScreen.hidden = false;
+  lastPasswordLength = 0;
+  startLockPhotoHearts();
 });
 
 elements.refreshButton.addEventListener("click", async () => {
@@ -159,6 +178,7 @@ elements.memoryForm.addEventListener("submit", async (event) => {
 });
 
 async function unlock() {
+  stopLockPhotoHearts();
   elements.lockScreen.hidden = true;
   elements.albumApp.hidden = false;
   await Promise.all([loadMemories(), loadMessages()]);
@@ -168,6 +188,73 @@ async function unlock() {
 
 function restoreSession() {
   if (sessionStorage.getItem(sessionKey) === "true") unlock();
+}
+
+function startLockPhotoHearts() {
+  stopLockPhotoHearts();
+
+  for (let index = 0; index < 6; index += 1) {
+    window.setTimeout(spawnLockPhotoHeart, index * 220);
+  }
+
+  lockPhotoHeartsTimer = window.setInterval(spawnLockPhotoHeart, 520);
+}
+
+function stopLockPhotoHearts() {
+  if (lockPhotoHeartsTimer) {
+    window.clearInterval(lockPhotoHeartsTimer);
+    lockPhotoHeartsTimer = null;
+  }
+}
+
+function spawnLockPhotoHeart() {
+  if (!elements.lockPhotoHearts || elements.lockScreen.hidden) return;
+
+  const heart = document.createElement("span");
+  heart.className = "lock-photo-heart";
+  heart.textContent = "❤";
+
+  const left = 12 + Math.random() * 72;
+  const top = 56 + Math.random() * 24;
+  const drift = -12 + Math.random() * 24;
+  const scale = 0.72 + Math.random() * 0.82;
+  const duration = 3400 + Math.random() * 1400;
+
+  heart.style.left = `${left}%`;
+  heart.style.top = `${top}%`;
+  heart.style.setProperty("--lock-heart-drift", `${drift}px`);
+  heart.style.setProperty("--lock-heart-scale", scale.toFixed(2));
+  heart.style.animationDuration = `${Math.round(duration)}ms`;
+
+  elements.lockPhotoHearts.append(heart);
+  window.setTimeout(() => {
+    heart.remove();
+  }, duration + 120);
+}
+
+function spawnPasswordHeart() {
+  if (!elements.passwordHearts) return;
+
+  const heart = document.createElement("span");
+  heart.className = "password-heart";
+  heart.textContent = "❤";
+
+  const side = Math.random() > 0.5 ? "right" : "left";
+  const horizontalOffset = side === "left" ? 18 + Math.random() * 14 : 64 + Math.random() * 10;
+  const drift = side === "left" ? -10 - Math.random() * 10 : 10 + Math.random() * 10;
+  const duration = 520 + Math.random() * 140;
+  const scale = 0.72 + Math.random() * 0.36;
+
+  heart.style.left = `${horizontalOffset}%`;
+  heart.style.top = `${42 + Math.random() * 18}%`;
+  heart.style.setProperty("--password-heart-drift", `${drift}px`);
+  heart.style.setProperty("--password-heart-scale", scale.toFixed(2));
+  heart.style.animationDuration = `${Math.round(duration)}ms`;
+
+  elements.passwordHearts.append(heart);
+  window.setTimeout(() => {
+    heart.remove();
+  }, duration + 80);
 }
 
 function setSaving(isSaving, message) {
