@@ -601,12 +601,6 @@ h2 {
   transition: opacity 0.3s ease;
 }
 
-.lamp-scene.is-left-on .lamp.left .lamp-glow,
-.lamp-scene.is-right-on .lamp.right .lamp-glow,
-.lamp-scene.is-on .lamp-glow {
-  opacity: 1;
-}
-
 .lamp-scene.is-left-on .lamp.left .lamp-shell,
 .lamp-scene.is-right-on .lamp.right .lamp-shell,
 .lamp-scene.is-on .lamp-shell {
