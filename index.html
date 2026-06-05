@@ -125,6 +125,7 @@
           </div>
 
           <form id="messageForm" class="message-form">
+            <input id="editingMessageIdInput" type="hidden" />
             <label>
               谁写的
               <input id="messageAuthorInput" type="text" maxlength="20" placeholder="比如：浩浩 / 秀琴" required />
@@ -145,7 +146,10 @@
             </label>
             <div class="message-form-actions">
               <p id="messageStatus" role="status"></p>
-              <button id="submitMessageButton" type="submit">写下这条留言</button>
+              <div class="message-action-buttons">
+                <button id="cancelMessageEditButton" class="ghost-button" type="button" hidden>取消修改</button>
+                <button id="submitMessageButton" type="submit">写下这条留言</button>
+              </div>
             </div>
           </form>
 

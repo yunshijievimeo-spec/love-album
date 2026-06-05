@@ -42,10 +42,12 @@ const elements = {
   lightboxClose: document.querySelector("#lightboxClose"),
   lightboxImage: document.querySelector("#lightboxImage"),
   messageForm: document.querySelector("#messageForm"),
+  editingMessageIdInput: document.querySelector("#editingMessageIdInput"),
   messageAuthorInput: document.querySelector("#messageAuthorInput"),
   messageDateInput: document.querySelector("#messageDateInput"),
   messageTextInput: document.querySelector("#messageTextInput"),
   messageStatus: document.querySelector("#messageStatus"),
+  cancelMessageEditButton: document.querySelector("#cancelMessageEditButton"),
   submitMessageButton: document.querySelector("#submitMessageButton"),
   messageTableBody: document.querySelector("#messageTableBody")
 };
@@ -97,6 +99,9 @@ elements.lightboxClose.addEventListener("click", closeLightbox);
 
 if (elements.messageForm) {
   elements.messageForm.addEventListener("submit", handleMessageSubmit);
+}
+if (elements.cancelMessageEditButton) {
+  elements.cancelMessageEditButton.addEventListener("click", resetMessageForm);
 }
 
 elements.photoLightbox.addEventListener("click", (event) => {
@@ -184,7 +189,10 @@ function resetMemoryForm() {
 function resetMessageForm() {
   if (!elements.messageForm) return;
   elements.messageForm.reset();
+  elements.editingMessageIdInput.value = "";
   elements.messageDateInput.valueAsDate = new Date();
+  elements.submitMessageButton.textContent = "写下这条留言";
+  elements.cancelMessageEditButton.hidden = true;
 }
 
 function updateDaysTogether() {
@@ -328,7 +336,8 @@ function createMemoryCard(memory) {
 
 async function handleMessageSubmit(event) {
   event.preventDefault();
-  setMessageSaving(true, "正在写入留言...");
+  const editingId = elements.editingMessageIdInput.value;
+  setMessageSaving(true, editingId ? "正在保存修改..." : "正在写入留言...");
 
   const message = {
     author: elements.messageAuthorInput.value.trim(),
@@ -337,14 +346,20 @@ async function handleMessageSubmit(event) {
   };
 
   try {
-    if (hasSupabase) {
+    if (editingId) {
+      if (hasSupabase) {
+        await updateMessageInSupabase(editingId, message);
+      } else {
+        updateMessageInLocal(editingId, message);
+      }
+    } else if (hasSupabase) {
       await saveMessageToSupabase(message);
     } else {
       saveMessageToLocal(message);
     }
 
     resetMessageForm();
-    setMessageSaving(false, "留言写好了。");
+    setMessageSaving(false, editingId ? "留言修改好了。" : "留言写好了。");
     await loadMessages();
   } catch (error) {
     console.error(error);
@@ -355,7 +370,12 @@ async function handleMessageSubmit(event) {
 function setMessageSaving(isSaving, message) {
   if (!elements.submitMessageButton) return;
   elements.submitMessageButton.disabled = isSaving;
-  elements.submitMessageButton.textContent = isSaving ? "正在写入..." : "写下这条留言";
+  elements.submitMessageButton.textContent = isSaving
+    ? "正在保存..."
+    : elements.editingMessageIdInput.value
+      ? "保存修改"
+      : "写下这条留言";
+  elements.cancelMessageEditButton.disabled = isSaving;
   elements.messageStatus.textContent = message;
 }
 
@@ -366,6 +386,11 @@ async function saveMessageToSupabase(message) {
 
 async function deleteMessageFromSupabase(id) {
   const { error } = await supabaseClient.from(messageTableName).delete().eq("id", id);
+  if (error) throw error;
+}
+
+async function updateMessageInSupabase(id, message) {
+  const { error } = await supabaseClient.from(messageTableName).update(message).eq("id", id);
   if (error) throw error;
 }
 
@@ -381,6 +406,11 @@ function saveMessageToLocal(message) {
 
 function deleteMessageFromLocal(id) {
   const messages = readLocalMessages().filter((message) => message.id !== id);
+  localStorage.setItem(localMessagesKey, JSON.stringify(messages));
+}
+
+function updateMessageInLocal(id, message) {
+  const messages = readLocalMessages().map((item) => (item.id === id ? { ...item, ...message } : item));
   localStorage.setItem(localMessagesKey, JSON.stringify(messages));
 }
 
@@ -432,6 +462,7 @@ function renderMessageRow(message) {
   const authorCell = document.createElement("td");
   const contentCell = document.createElement("td");
   const actionCell = document.createElement("td");
+  const editButton = document.createElement("button");
   const deleteButton = document.createElement("button");
 
   dateCell.textContent = formatDate(message.message_date);
@@ -439,9 +470,16 @@ function renderMessageRow(message) {
   contentCell.textContent = message.content || "";
   actionCell.className = "message-actions";
 
+  editButton.type = "button";
+  editButton.className = "message-edit-button";
+  editButton.textContent = "修改";
+  editButton.disabled = !message.id || message.id === "message-error" || message.id === "message-empty";
+  editButton.addEventListener("click", () => startEditingMessage(message));
+
   deleteButton.type = "button";
   deleteButton.className = "message-delete-button";
   deleteButton.textContent = "删除";
+  deleteButton.disabled = !message.id || message.id === "message-error" || message.id === "message-empty";
   deleteButton.addEventListener("click", async () => {
     const confirmed = window.confirm("确定删除这条留言吗？");
     if (!confirmed) return;
@@ -461,9 +499,22 @@ function renderMessageRow(message) {
     }
   });
 
-  actionCell.append(deleteButton);
+  actionCell.append(editButton, deleteButton);
   row.append(dateCell, authorCell, contentCell, actionCell);
   elements.messageTableBody.append(row);
+}
+
+function startEditingMessage(message) {
+  if (!message?.id || message.id === "message-error" || message.id === "message-empty") return;
+
+  elements.editingMessageIdInput.value = message.id;
+  elements.messageAuthorInput.value = message.author || "";
+  elements.messageDateInput.value = message.message_date || "";
+  elements.messageTextInput.value = message.content || "";
+  elements.submitMessageButton.textContent = "保存修改";
+  elements.cancelMessageEditButton.hidden = false;
+  elements.messageStatus.textContent = "正在修改这条留言。";
+  elements.messageForm.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function openLightbox(src, alt) {

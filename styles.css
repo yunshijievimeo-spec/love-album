@@ -517,12 +517,25 @@ textarea:focus,
   gap: 1rem;
 }
 
+.message-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
 .message-form-actions button {
   border-radius: 8px;
   padding: 0.78rem 1.2rem;
   color: #fff;
   background: var(--rose-dark);
   box-shadow: 0 12px 24px rgba(169, 80, 97, 0.24);
+}
+
+.message-action-buttons .ghost-button {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: none;
 }
 
 .message-table-wrap {
@@ -564,21 +577,39 @@ textarea:focus,
 }
 
 .message-actions {
-  width: 88px;
+  width: 116px;
   text-align: center;
   white-space: nowrap;
 }
 
+.message-edit-button,
 .message-delete-button {
-  min-width: 58px;
-  padding: 0.45rem 0.7rem;
-  border: 1px solid rgba(191, 76, 76, 0.28);
+  min-width: 48px;
+  padding: 0.32rem 0.56rem;
   border-radius: 999px;
-  color: #b54d4d;
-  background: rgba(255, 245, 245, 0.95);
   font: inherit;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.message-edit-button {
+  margin-right: 0.35rem;
+  border: 1px solid rgba(83, 55, 44, 0.18);
+  color: #7a5f53;
+  background: rgba(255, 251, 249, 0.95);
+}
+
+.message-edit-button:hover {
+  color: #fff;
+  background: #9d7b6b;
+  border-color: #9d7b6b;
+}
+
+.message-delete-button {
+  border: 1px solid rgba(191, 76, 76, 0.28);
+  color: #b54d4d;
+  background: rgba(255, 245, 245, 0.95);
 }
 
 .message-delete-button:hover {
