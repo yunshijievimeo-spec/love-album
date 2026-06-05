@@ -14,5 +14,6 @@ window.LOVE_ALBUM_CONFIG = {
   lampTableName: "couple_goodnight_lamps",
   scoreTableName: "couple_miss_scores",
   syncQuestionTableName: "couple_sync_questions",
-  capsuleTableName: "couple_capsules"
+  capsuleTableName: "couple_capsules",
+  gardenWaterTableName: "couple_garden_watering"
 };

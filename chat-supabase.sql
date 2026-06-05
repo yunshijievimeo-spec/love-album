@@ -97,6 +97,15 @@ create table if not exists public.couple_capsules (
   content text not null
 );
 
+create table if not exists public.couple_garden_watering (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  water_date date not null,
+  person text not null,
+  count integer not null default 0,
+  unique (water_date, person)
+);
+
 alter table public.couple_chat_messages enable row level security;
 alter table public.couple_status_cards enable row level security;
 alter table public.couple_riddles enable row level security;
@@ -108,6 +117,7 @@ alter table public.couple_goodnight_lamps enable row level security;
 alter table public.couple_miss_scores enable row level security;
 alter table public.couple_sync_questions enable row level security;
 alter table public.couple_capsules enable row level security;
+alter table public.couple_garden_watering enable row level security;
 
 drop policy if exists "Anyone can read couple_chat_messages" on public.couple_chat_messages;
 create policy "Anyone can read couple_chat_messages"
@@ -381,5 +391,30 @@ with check (true);
 drop policy if exists "Anyone can delete couple_capsules" on public.couple_capsules;
 create policy "Anyone can delete couple_capsules"
 on public.couple_capsules for delete
+to anon
+using (true);
+
+drop policy if exists "Anyone can read couple_garden_watering" on public.couple_garden_watering;
+create policy "Anyone can read couple_garden_watering"
+on public.couple_garden_watering for select
+to anon
+using (true);
+
+drop policy if exists "Anyone can insert couple_garden_watering" on public.couple_garden_watering;
+create policy "Anyone can insert couple_garden_watering"
+on public.couple_garden_watering for insert
+to anon
+with check (true);
+
+drop policy if exists "Anyone can update couple_garden_watering" on public.couple_garden_watering;
+create policy "Anyone can update couple_garden_watering"
+on public.couple_garden_watering for update
+to anon
+using (true)
+with check (true);
+
+drop policy if exists "Anyone can delete couple_garden_watering" on public.couple_garden_watering;
+create policy "Anyone can delete couple_garden_watering"
+on public.couple_garden_watering for delete
 to anon
 using (true);
