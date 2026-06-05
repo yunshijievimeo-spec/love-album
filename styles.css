@@ -167,6 +167,7 @@ textarea:focus,
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  z-index: 4;
 }
 
 .lock-photo-heart,
@@ -190,9 +191,15 @@ textarea:focus,
   --password-heart-drift: 0px;
   --password-heart-scale: 1;
   color: rgba(225, 95, 126, 0.78);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   transform: translate3d(0, 8px, 0) scale(var(--password-heart-scale));
   animation: passwordHeartPop ease-out forwards;
+}
+
+.password-row input,
+.password-row button {
+  position: relative;
+  z-index: 2;
 }
 
 .polaroid {
