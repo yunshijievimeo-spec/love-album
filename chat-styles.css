@@ -1631,20 +1631,90 @@ h2 {
     justify-content: stretch;
   }
 
-  .garden-stats {
-    grid-template-columns: 1fr;
-  }
-
   .hero-board-stats {
     grid-template-columns: 1fr;
   }
 
+  .garden-card,
+  .baby-card {
+    min-height: calc(100svh - 24px);
+    align-content: start;
+  }
+
+  .garden-card .card-text,
+  .baby-card .card-text {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .garden-layout,
+  .baby-layout {
+    grid-template-columns: minmax(144px, 44%) minmax(0, 1fr);
+    gap: 0.85rem;
+    align-items: stretch;
+  }
+
   .garden-visual {
-    min-height: 560px;
+    min-height: 360px;
+  }
+
+  .baby-visual {
+    min-height: 360px;
+  }
+
+  .garden-panel,
+  .baby-panel {
+    gap: 0.75rem;
+    align-content: start;
+  }
+
+  .garden-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .garden-stat,
+  .info-panel {
+    padding: 0.78rem 0.82rem;
+    border-radius: 18px;
+  }
+
+  .garden-stat span {
+    font-size: 0.78rem;
+  }
+
+  .garden-stat strong {
+    margin-top: 0.2rem;
+    font-size: 1rem;
+  }
+
+  .garden-progress {
+    gap: 0.45rem;
+  }
+
+  .garden-progress-bar {
+    height: 12px;
+  }
+
+  .garden-progress-hint,
+  .info-panel p {
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+
+  .garden-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .baby-panel .garden-actions {
+    grid-template-columns: 1fr;
   }
 
   .garden-yearline {
-    inset: 16px;
+    inset: 10px;
+    gap: 6px;
   }
 
   .garden-focus {
@@ -1652,7 +1722,173 @@ h2 {
   }
 
   .garden-bottle {
-    transform: translateY(16px) scale(0.92);
+    transform: translateY(12px) scale(0.7);
     transform-origin: center center;
+  }
+
+  .garden-mini-month {
+    padding: 6px 4px;
+    gap: 3px;
+    border-radius: 14px;
+  }
+
+  .garden-mini-month-name {
+    gap: 0;
+  }
+
+  .garden-mini-month-year {
+    font-size: 0.5rem;
+  }
+
+  .garden-mini-month-label {
+    font-size: 0.64rem;
+  }
+
+  .garden-mini-month-note {
+    display: none;
+  }
+
+  .garden-mini-bottle {
+    width: 44px;
+    height: 52px;
+  }
+
+  .garden-mini-bottle-mouth {
+    width: 18px;
+    height: 5px;
+  }
+
+  .garden-mini-bottle-neck {
+    top: 5px;
+    width: 12px;
+    height: 10px;
+  }
+
+  .garden-mini-bottle-body {
+    top: 13px;
+    width: 30px;
+    height: 28px;
+    border-radius: 10px 10px 12px 12px;
+  }
+
+  .garden-mini-bottle-base {
+    width: 24px;
+    height: 5px;
+  }
+
+  .garden-mini-fruit {
+    top: 0;
+  }
+
+  .water-drop {
+    top: 58px;
+  }
+
+  .water-heart {
+    top: 190px;
+  }
+
+  .baby-room {
+    min-height: 360px;
+    padding: 20px 14px 16px;
+  }
+
+  .baby-room-stars span {
+    font-size: 18px;
+  }
+
+  .baby-crib {
+    bottom: 40px;
+    width: 108px;
+    height: 148px;
+    border-radius: 26px 26px 22px 22px;
+  }
+
+  .baby-crib.left {
+    left: 12px;
+  }
+
+  .baby-crib.right {
+    right: 12px;
+  }
+
+  .baby-swaddle {
+    top: 40px;
+    width: 68px;
+    height: 92px;
+    margin-left: -34px;
+    border-radius: 34px 34px 28px 28px;
+  }
+
+  .baby-head {
+    top: -14px;
+    width: 34px;
+    height: 34px;
+    margin-left: -17px;
+  }
+
+  .baby-eye {
+    top: 15px;
+    width: 10px;
+  }
+
+  .baby-eye.left {
+    left: 18px;
+  }
+
+  .baby-eye.right {
+    right: 18px;
+  }
+
+  .baby-mouth {
+    bottom: 22px;
+    width: 14px;
+    margin-left: -7px;
+  }
+
+  .baby-bubble {
+    top: 12px;
+    padding: 0.24rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .baby-name {
+    font-size: 0.74rem;
+  }
+
+  .baby-ground {
+    left: 16px;
+    right: 16px;
+    bottom: 14px;
+    height: 18px;
+  }
+
+  .baby-thanks {
+    font-size: 0.72rem;
+    padding: 0.32rem 0.62rem;
+  }
+
+  .baby-heart-float {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .garden-layout,
+  .baby-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .garden-visual,
+  .baby-visual {
+    min-height: 300px;
+  }
+
+  .garden-bottle {
+    transform: translateY(10px) scale(0.66);
+  }
+
+  .garden-stats {
+    grid-template-columns: 1fr;
   }
 }
