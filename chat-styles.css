@@ -730,6 +730,22 @@ h2 {
   box-shadow: 0 12px 24px rgba(111, 91, 83, 0.12);
 }
 
+.baby-complaint {
+  padding: 0.38rem 0.74rem;
+  border-radius: 999px;
+  color: #8a5d56;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(255, 245, 244, 0.92);
+  box-shadow: 0 12px 24px rgba(132, 96, 90, 0.12);
+}
+
+.baby-complaint.is-urgent {
+  color: #b54e63;
+  background: rgba(255, 237, 242, 0.94);
+  box-shadow: 0 14px 28px rgba(181, 78, 99, 0.14);
+}
+
 .baby-heart-float {
   color: rgba(255, 115, 148, 0.94);
   font-size: 18px;
@@ -911,6 +927,14 @@ h2 {
 
 .baby-room.is-crying .baby-tear {
   opacity: 1;
+}
+
+.baby-room.is-very-hungry .baby-mouth {
+  transform: scale(1.08);
+}
+
+.baby-room.is-very-hungry .baby-bubble.cry {
+  background: rgba(255, 237, 242, 0.94);
 }
 
 .baby-room.is-complete .baby-mouth {
