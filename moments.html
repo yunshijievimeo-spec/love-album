@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>有趣的今天小瞬间</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./moments-styles.css" />
+  </head>
+  <body>
+    <main class="moments-shell">
+      <section class="moments-hero">
+        <div class="moments-hero-copy">
+          <p class="eyebrow">Tiny Moment Puzzle</p>
+          <h1>有趣的今天小瞬间</h1>
+          <p class="hero-text">
+            把今天里想分享给对方的一幕，悄悄藏成一张小拼图。拼开以后，照片会轻轻放大，爱心飘起来，
+            再把那句只想给对方看的小话亮出来。
+          </p>
+        </div>
+
+        <div class="moments-hero-side">
+          <div class="sync-card">
+            <span>当前同步状态</span>
+            <strong id="syncModeBadge">本地预览准备中</strong>
+            <small id="syncModeHint">先把页面内容准备好，再尝试连上云端。</small>
+          </div>
+
+          <label class="identity-field" for="identitySelect">
+            <span>今天是谁在整理小瞬间</span>
+            <select id="identitySelect">
+              <option value="号号">号号</option>
+              <option value="秀琴">秀琴</option>
+            </select>
+          </label>
+
+          <div class="hero-actions">
+            <a class="soft-button ghost" href="./index.html">返回小天地</a>
+            <a class="soft-button" href="./chat.html">去爱的小屋</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="moment-layout">
+        <article class="moment-card composer-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Upload</p>
+              <h2>藏下今天的一张图</h2>
+            </div>
+            <span id="todayBadge" class="date-badge"></span>
+          </div>
+
+          <p class="card-text">
+            每天一人可以留一张图和一句悄悄话。上传时会自动压缩，只保留压缩后的版本，旧图也可以手动删掉。
+          </p>
+
+          <form id="uploadForm" class="composer-form">
+            <label class="upload-tile" for="photoInput">
+              <input id="photoInput" type="file" accept="image/*" />
+              <img id="uploadPreview" alt="上传预览" hidden />
+              <div id="uploadPlaceholder" class="upload-placeholder">
+                <span class="upload-plus">+</span>
+                <strong>挑一张今天的小照片</strong>
+                <small>会自动压成轻量 WebP，尽量控制在 250KB - 450KB</small>
+              </div>
+            </label>
+
+            <label class="note-field" for="noteInput">
+              <span>拼开后想让对方看到的话</span>
+              <textarea
+                id="noteInput"
+                rows="4"
+                maxlength="80"
+                placeholder="比如：今天路过这束光的时候，我第一反应就是想拍给你。"
+              ></textarea>
+            </label>
+
+            <div class="composer-summary">
+              <strong id="todayRecordTitle">今天还没藏图</strong>
+              <p id="uploadStatusText">选一张照片就能开始。已经传过的话，也可以换图或者只改留言。</p>
+            </div>
+
+            <div class="composer-actions">
+              <button id="submitButton" class="soft-button primary" type="submit">保存今天的小瞬间</button>
+              <button id="deleteTodayButton" class="soft-button ghost" type="button" disabled>删除我今天这张</button>
+            </div>
+
+            <p id="saveStatus" class="form-status" role="status"></p>
+          </form>
+        </article>
+
+        <article class="moment-card puzzle-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Puzzle</p>
+              <h2>拼开对方的今天</h2>
+            </div>
+            <button id="reshuffleButton" class="soft-button ghost" type="button" disabled>重新打乱</button>
+          </div>
+
+          <div id="emptyState" class="empty-state">
+            <strong>还没有可以拼的小瞬间</strong>
+            <p>先上传今天的一张图，或者等对方放进来一张，再来这里拼开它。</p>
+          </div>
+
+          <div id="puzzleWrap" class="puzzle-wrap" hidden>
+            <div id="puzzleStage" class="puzzle-stage">
+              <div id="heartBurst" class="heart-burst" aria-hidden="true"></div>
+              <div id="stageReveal" class="stage-reveal" hidden>
+                <div class="stage-reveal-glow"></div>
+                <img id="stageRevealImage" alt="拼图揭晓大图" />
+                <div class="stage-reveal-copy">
+                  <strong id="stageRevealTitle">你拼开了今天</strong>
+                  <span>小爱心已经悄悄冒出来了</span>
+                </div>
+              </div>
+              <div id="puzzleBoard" class="puzzle-board"></div>
+            </div>
+
+            <div class="puzzle-side">
+              <div class="viewer-meta">
+                <div>
+                  <strong id="viewerTitle">今天的小瞬间</strong>
+                  <p id="viewerMeta">等待选中一张记录。</p>
+                </div>
+                <button id="deleteSelectedButton" class="soft-button ghost small" type="button" hidden>删除这张</button>
+              </div>
+
+              <p id="viewerHint" class="viewer-hint">点一块，再点另一块交换位置，把照片拼回去就会揭晓。</p>
+
+              <div class="puzzle-stats">
+                <span id="moveCount">已交换 0 次</span>
+                <span id="selectedTip">还没有选中图块</span>
+              </div>
+
+              <div id="revealPanel" class="reveal-panel" hidden>
+                <div class="reveal-photo-shell">
+                  <img id="revealImage" alt="拼图揭晓" />
+                </div>
+                <strong id="revealTitle">你拼开了今天</strong>
+                <p id="revealNote">拼完后，这句留言会在这里出现。</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="moment-card history-card">
+        <div class="card-head">
+          <div>
+            <p class="card-kicker">Recent</p>
+            <h2>最近 30 张小瞬间</h2>
+          </div>
+        </div>
+        <p class="card-text">
+          默认只保留最近的 30 张压缩图。想提前清掉哪张，可以直接删，不用等满一个月。
+        </p>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+
+    <script src="./config.example.js"></script>
+    <script src="./moments-app.js"></script>
+  </body>
+</html>

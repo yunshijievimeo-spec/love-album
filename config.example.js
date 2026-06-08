@@ -16,5 +16,6 @@ window.LOVE_ALBUM_CONFIG = {
   syncQuestionTableName: "couple_sync_questions",
   capsuleTableName: "couple_capsules",
   gardenWaterTableName: "couple_garden_watering",
-  babyFeedTableName: "couple_baby_feeds"
+  babyFeedTableName: "couple_baby_feeds",
+  momentPuzzleTableName: "couple_moment_puzzles"
 };
