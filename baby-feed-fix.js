@@ -367,7 +367,9 @@
   }
 
   window.addEventListener("beforeunload", clearBabyAmbientTimer);
-  if (!state.isBooting) {
+  if (state.refreshPromise) {
+    state.refreshPromise.finally(() => hydrateBabyFeeds());
+  } else {
     hydrateBabyFeeds();
   }
 })();

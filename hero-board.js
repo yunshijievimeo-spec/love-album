@@ -109,4 +109,9 @@
       board.list.append(row);
     });
   };
+  if (state.refreshPromise) {
+    state.refreshPromise.finally(() => hydrateHeroBoard());
+  } else {
+    hydrateHeroBoard();
+  }
 })();

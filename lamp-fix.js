@@ -119,7 +119,9 @@
     elements.lampButton.addEventListener("click", handleLampSubmit);
   }
 
-  if (!state.isBooting) {
+  if (state.refreshPromise) {
+    state.refreshPromise.finally(() => hydrateLamps());
+  } else {
     hydrateLamps();
   }
 })();

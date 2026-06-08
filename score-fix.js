@@ -150,7 +150,9 @@
     elements.scoreInput.addEventListener("input", syncScorePreview);
   }
 
-  if (!state.isBooting) {
+  if (state.refreshPromise) {
+    state.refreshPromise.finally(() => hydrateScores());
+  } else {
     hydrateScores();
   }
 })();
