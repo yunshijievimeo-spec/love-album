@@ -1,5 +1,7 @@
 (function () {
   const BABY_FEED_INTERVAL_OVERRIDE_MS = 2 * 60 * 60 * 1000;
+  const BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON = 4;
+  const BABY_TOTAL_TARGET_OVERRIDE = 4000;
   const BABY_JUST_FED_WINDOW_MS = 18 * 60 * 1000;
   const BABY_VERY_HUNGRY_AFTER_MS = 45 * 60 * 1000;
   const BABY_HUNGRY_DELAY_RANGE = [6000, 10000];
@@ -158,14 +160,15 @@
     });
 
     const totalAmount = Math.min(
-      BABY_TOTAL_TARGET,
+      BABY_TOTAL_TARGET_OVERRIDE,
       normalizedRows.reduce((sum, item) => sum + Number(item.amount || 0), 0)
     );
     const todayRows = normalizedRows.filter((item) => item.feed_date === today);
     const haohaoToday = normalizePersonRows(todayRows, GARDEN_PEOPLE[0]).length;
     const xiuqinToday = normalizePersonRows(todayRows, GARDEN_PEOPLE[1]).length;
     const myTodayCount = state.identity === GARDEN_PEOPLE[0] ? haohaoToday : xiuqinToday;
-    const bothDailyFull = haohaoToday >= BABY_DAILY_LIMIT_PER_PERSON && xiuqinToday >= BABY_DAILY_LIMIT_PER_PERSON;
+    const bothDailyFull =
+      haohaoToday >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON && xiuqinToday >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON;
 
     const myRows = normalizePersonRows(normalizedRows, state.identity);
     const myLastRow = myRows[myRows.length - 1] || null;
@@ -182,14 +185,14 @@
     const hungerStage = overdueMs <= 0 ? "" : overdueMs >= BABY_VERY_HUNGRY_AFTER_MS ? "very-hungry" : "hungry";
 
     const canFeed =
-      totalAmount < BABY_TOTAL_TARGET &&
-      myTodayCount < BABY_DAILY_LIMIT_PER_PERSON &&
+      totalAmount < BABY_TOTAL_TARGET_OVERRIDE &&
+      myTodayCount < BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON &&
       (!myLastFeedAt || myCooldownRemaining <= 0);
 
     let scene = "is-waiting";
     let statusText = "\u7b49\u7b2c\u4e00\u987f\u5976";
 
-    if (totalAmount >= BABY_TOTAL_TARGET) {
+    if (totalAmount >= BABY_TOTAL_TARGET_OVERRIDE) {
       scene = "is-complete";
       statusText = "\u5582\u517b\u6bd5\u4e1a";
     } else if (!lastFeedAt) {
@@ -230,8 +233,8 @@
       statusText,
       justFed,
       hungerStage,
-      progressPercent: (totalAmount / BABY_TOTAL_TARGET) * 100,
-      remainingAmount: Math.max(0, BABY_TOTAL_TARGET - totalAmount)
+      progressPercent: (totalAmount / BABY_TOTAL_TARGET_OVERRIDE) * 100,
+      remainingAmount: Math.max(0, BABY_TOTAL_TARGET_OVERRIDE - totalAmount)
     };
   };
 
@@ -241,23 +244,23 @@
     }
 
     const stats = getBabyFeedStats();
-    const myRemaining = Math.max(0, BABY_DAILY_LIMIT_PER_PERSON - stats.myTodayCount);
+    const myRemaining = Math.max(0, BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON - stats.myTodayCount);
 
     elements.babyRoom.className = `baby-room ${stats.scene}${stats.hungerStage === "very-hungry" ? " is-very-hungry" : ""}`;
     elements.babyStatusBadge.textContent = stats.statusText;
-    elements.babyTotalAmount.textContent = `${stats.totalAmount} / ${BABY_TOTAL_TARGET}ml`;
-    elements.babyHaohaoCount.textContent = `${stats.haohaoToday} / ${BABY_DAILY_LIMIT_PER_PERSON} \u6b21`;
-    elements.babyXiuqinCount.textContent = `${stats.xiuqinToday} / ${BABY_DAILY_LIMIT_PER_PERSON} \u6b21`;
+    elements.babyTotalAmount.textContent = `${stats.totalAmount} / ${BABY_TOTAL_TARGET_OVERRIDE}ml`;
+    elements.babyHaohaoCount.textContent = `${stats.haohaoToday} / ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} \u6b21`;
+    elements.babyXiuqinCount.textContent = `${stats.xiuqinToday} / ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} \u6b21`;
     elements.babyFeedState.textContent = stats.statusText;
     elements.babyProgressFill.style.width = `${stats.progressPercent}%`;
 
-    if (stats.totalAmount >= BABY_TOTAL_TARGET) {
+    if (stats.totalAmount >= BABY_TOTAL_TARGET_OVERRIDE) {
       elements.babyProgressHint.textContent =
-        "3000ml \u5df2\u7ecf\u5582\u6ee1\u5566\uff0c\u8fd9\u5bf9\u5b9d\u5b9d\u88ab\u4f60\u4eec\u4e00\u8d77\u7a33\u7a33\u517b\u5927\u4e86\u3002";
+        "4000ml \u5df2\u7ecf\u5582\u6ee1\u5566\uff0c\u8fd9\u5bf9\u5b9d\u5b9d\u88ab\u4f60\u4eec\u4e00\u8d77\u7a33\u7a33\u517b\u5927\u4e86\u3002";
     } else if (!stats.lastFeedAt) {
       elements.babyProgressHint.textContent =
         "\u5148\u5582\u7b2c\u4e00\u987f\u5976\u5427\uff0c\u559d\u5b8c 50ml \u540e\u5b9d\u5b9d\u4f1a\u5b89\u7a33\u7761 2 \u5c0f\u65f6\u3002";
-    } else if (stats.myTodayCount >= BABY_DAILY_LIMIT_PER_PERSON) {
+    } else if (stats.myTodayCount >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON) {
       elements.babyProgressHint.textContent =
         "\u4f60\u4eca\u5929\u5df2\u7ecf\u5582\u6ee1 3 \u6b21\u4e86\uff0c\u73b0\u5728\u8f6e\u5230\u5bf9\u65b9\u7ee7\u7eed\u7167\u987e\u5b9d\u5b9d\u3002";
     } else if (stats.myCooldownRemaining > 0) {
@@ -279,9 +282,9 @@
     }
 
     elements.babyFeedButton.disabled = !stats.canFeed;
-    if (stats.totalAmount >= BABY_TOTAL_TARGET) {
-      elements.babyFeedButton.textContent = "3000ml \u5df2\u517b\u6ee1";
-    } else if (stats.myTodayCount >= BABY_DAILY_LIMIT_PER_PERSON) {
+    if (stats.totalAmount >= BABY_TOTAL_TARGET_OVERRIDE) {
+      elements.babyFeedButton.textContent = "4000ml \u5df2\u517b\u6ee1";
+    } else if (stats.myTodayCount >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON) {
       elements.babyFeedButton.textContent = "\u4f60\u4eca\u5929\u5582\u6ee1\u4e86";
     } else if (stats.myCooldownRemaining > 0 && stats.myLastFeedAt) {
       elements.babyFeedButton.textContent = `\u8fd8\u8981\u7b49 ${formatBabyDuration(stats.myCooldownRemaining)}`;
@@ -296,7 +299,7 @@
 
     renderInfoPanel(
       elements.babySummary,
-      `\u4eca\u5929\u4e00\u5171\u5582\u4e86 ${stats.todayRows.length * BABY_FEED_AMOUNT}ml\uff0c\u7d2f\u8ba1 ${stats.totalAmount} / ${BABY_TOTAL_TARGET}ml\u3002`,
+      `\u4eca\u5929\u4e00\u5171\u5582\u4e86 ${stats.todayRows.length * BABY_FEED_AMOUNT}ml\uff0c\u7d2f\u8ba1 ${stats.totalAmount} / ${BABY_TOTAL_TARGET_OVERRIDE}ml\u3002`,
       syncHint
     );
 
