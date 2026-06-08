@@ -3,6 +3,7 @@ const PEOPLE = ["号号", "秀琴"];
 const MAX_RECORDS = 30;
 const MAX_PER_DAY = 2;
 const MAX_IMAGE_BYTES = 450 * 1024;
+const CLOUD_REFRESH_MS = 15000;
 const DEFAULT_TABLE = config.momentPuzzleTableName || "couple_moment_puzzles";
 const LOCAL_KEYS = {
   records: "love-moment-puzzles-records",
@@ -61,6 +62,8 @@ const state = {
   solved: false,
   supabaseClient: null,
   hasCloud: false,
+  syncTimer: 0,
+  syncInFlight: false,
   previewUrl: "",
   shouldAnimateReveal: false
 };
@@ -96,6 +99,16 @@ elements.reshuffleButton.addEventListener("click", () => {
   if (!record) return;
   setupPuzzle(record);
   renderPuzzleArea();
+});
+
+window.addEventListener("focus", () => {
+  void syncMomentsFromCloud();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    void syncMomentsFromCloud();
+  }
 });
 
 connectCloudIfPossible();
@@ -847,6 +860,31 @@ async function refreshRecords() {
   state.records = mergeRecords(data || [], readLocalRecords());
 }
 
+async function syncMomentsFromCloud() {
+  if (!state.hasCloud || state.syncInFlight) return;
+
+  state.syncInFlight = true;
+
+  try {
+    await refreshRecords();
+    refreshSelectedRecord();
+    renderAll();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    state.syncInFlight = false;
+  }
+}
+
+function startCloudSyncLoop() {
+  if (state.syncTimer) return;
+
+  state.syncTimer = window.setInterval(() => {
+    if (document.hidden) return;
+    void syncMomentsFromCloud();
+  }, CLOUD_REFRESH_MS);
+}
+
 async function deleteRecord(record) {
   const okay = window.confirm(`确定删除 ${record.person} 在 ${formatShortDate(record.moment_date)} 的这张小瞬间吗？`);
   if (!okay) return;
@@ -898,9 +936,8 @@ async function connectCloudIfPossible() {
     state.supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
     state.hasCloud = true;
     setSyncMode("云端连接成功", "现在这页会优先读云端数据，手机和电脑打开会更容易同步。");
-    await refreshRecords();
-    refreshSelectedRecord();
-    renderAll();
+    await syncMomentsFromCloud();
+    startCloudSyncLoop();
   } catch (error) {
     console.error(error);
     state.hasCloud = false;
