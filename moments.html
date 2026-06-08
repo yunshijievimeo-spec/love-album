@@ -57,10 +57,15 @@
           </div>
 
           <p class="card-text">
-            每天一人可以留一张图和一句悄悄话。上传时会自动压缩，只保留压缩后的版本，旧图也可以手动删掉。
+            每天一人可以留两张图和两句悄悄话。上传时会自动压缩，只保留压缩后的版本，旧图也可以手动删掉。
           </p>
 
           <form id="uploadForm" class="composer-form">
+            <div class="slot-picker" role="tablist" aria-label="今天的小瞬间位置">
+              <button id="slotOneButton" class="slot-chip is-active" type="button" data-slot="1" aria-pressed="true">今天第 1 张</button>
+              <button id="slotTwoButton" class="slot-chip" type="button" data-slot="2" aria-pressed="false">今天第 2 张</button>
+            </div>
+
             <label class="upload-tile" for="photoInput">
               <input id="photoInput" type="file" accept="image/*" />
               <img id="uploadPreview" alt="上传预览" hidden />
@@ -137,6 +142,20 @@
               <div class="puzzle-stats">
                 <span id="moveCount">已交换 0 次</span>
                 <span id="selectedTip">还没有选中图块</span>
+              </div>
+
+              <div class="completion-card">
+                <strong>这张拼图完成状态</strong>
+                <div class="completion-status-list">
+                  <div class="completion-status-item">
+                    <span>号号</span>
+                    <b id="haohaoCompletionStatus" class="completion-pill">还没拼开</b>
+                  </div>
+                  <div class="completion-status-item">
+                    <span>秀琴</span>
+                    <b id="xiuqinCompletionStatus" class="completion-pill">还没拼开</b>
+                  </div>
+                </div>
               </div>
 
               <div id="revealPanel" class="reveal-panel" hidden>

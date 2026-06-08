@@ -1,6 +1,7 @@
 const config = window.LOVE_ALBUM_CONFIG || {};
 const PEOPLE = ["号号", "秀琴"];
 const MAX_RECORDS = 30;
+const MAX_PER_DAY = 2;
 const MAX_IMAGE_BYTES = 450 * 1024;
 const DEFAULT_TABLE = config.momentPuzzleTableName || "couple_moment_puzzles";
 const LOCAL_KEYS = {
@@ -20,6 +21,8 @@ const elements = {
   noteInput: document.querySelector("#noteInput"),
   submitButton: document.querySelector("#submitButton"),
   deleteTodayButton: document.querySelector("#deleteTodayButton"),
+  slotOneButton: document.querySelector("#slotOneButton"),
+  slotTwoButton: document.querySelector("#slotTwoButton"),
   saveStatus: document.querySelector("#saveStatus"),
   todayRecordTitle: document.querySelector("#todayRecordTitle"),
   uploadStatusText: document.querySelector("#uploadStatusText"),
@@ -37,6 +40,8 @@ const elements = {
   viewerMeta: document.querySelector("#viewerMeta"),
   viewerHint: document.querySelector("#viewerHint"),
   deleteSelectedButton: document.querySelector("#deleteSelectedButton"),
+  haohaoCompletionStatus: document.querySelector("#haohaoCompletionStatus"),
+  xiuqinCompletionStatus: document.querySelector("#xiuqinCompletionStatus"),
   revealPanel: document.querySelector("#revealPanel"),
   revealImage: document.querySelector("#revealImage"),
   revealTitle: document.querySelector("#revealTitle"),
@@ -49,6 +54,7 @@ const state = {
   identity: normalizePerson(localStorage.getItem(LOCAL_KEYS.identity) || "号号"),
   records: readLocalRecords(),
   selectedId: null,
+  currentSlot: 1,
   selectedTile: null,
   pieces: [],
   moves: 0,
@@ -63,6 +69,7 @@ elements.identitySelect.value = state.identity;
 elements.todayBadge.textContent = formatDisplayDate(getTodayString());
 setSyncMode("本地预览准备中", "页面先用本地内容起步，再去尝试连接云端。");
 refreshSelectedRecord();
+updateSlotButtons();
 renderAll();
 
 elements.identitySelect.addEventListener("change", () => {
@@ -74,8 +81,10 @@ elements.identitySelect.addEventListener("change", () => {
 
 elements.photoInput.addEventListener("change", handlePreviewChange);
 elements.uploadForm.addEventListener("submit", handleSaveRecord);
+elements.slotOneButton?.addEventListener("click", () => switchComposerSlot(1));
+elements.slotTwoButton?.addEventListener("click", () => switchComposerSlot(2));
 elements.deleteTodayButton.addEventListener("click", async () => {
-  const record = getTodayRecordForPerson(state.identity);
+  const record = getTodayRecordForPerson(state.identity, state.currentSlot);
   if (record) await deleteRecord(record);
 });
 elements.deleteSelectedButton.addEventListener("click", async () => {
@@ -134,6 +143,31 @@ function setSyncMode(title, hint) {
   elements.syncModeHint.textContent = hint;
 }
 
+function getSolvedAtField(person) {
+  return person === "秀琴" ? "solved_by_xiuqin_at" : "solved_by_haohao_at";
+}
+
+function getSlotKey(record) {
+  return `${record.person}-${record.moment_date}-${record.puzzle_slot || 1}`;
+}
+
+function updateSlotButtons() {
+  [elements.slotOneButton, elements.slotTwoButton].forEach((button, index) => {
+    if (!button) return;
+    const slot = index + 1;
+    const isActive = slot === state.currentSlot;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function switchComposerSlot(slot) {
+  state.currentSlot = slot;
+  clearPreviewUrl();
+  updateSlotButtons();
+  renderComposer();
+}
+
 function readLocalRecords() {
   try {
     const raw = localStorage.getItem(LOCAL_KEYS.records);
@@ -156,12 +190,15 @@ function normalizeRecord(record) {
     id: record.id || crypto.randomUUID(),
     person: normalizePerson(record.person),
     moment_date: record.moment_date || getTodayString(),
+    puzzle_slot: Number(record.puzzle_slot || 1),
     note: (record.note || "").trim(),
     image_path: record.image_path || "",
     image_url: record.image_url || "",
     image_size: Number(record.image_size || 0),
     width: Number(record.width || 0),
     height: Number(record.height || 0),
+    solved_by_haohao_at: record.solved_by_haohao_at || "",
+    solved_by_xiuqin_at: record.solved_by_xiuqin_at || "",
     created_at: record.created_at || new Date().toISOString()
   };
 }
@@ -181,7 +218,7 @@ function trimRecords(records) {
     .map(normalizeRecord)
     .sort(compareRecords)
     .forEach((record) => {
-      const key = `${record.person}-${record.moment_date}`;
+      const key = getSlotKey(record);
       if (seen.has(key)) return;
       seen.add(key);
       merged.push(record);
@@ -196,7 +233,7 @@ function mergeRecords(primary, secondary) {
 
   [...primary, ...secondary].forEach((record) => {
     const normalized = normalizeRecord(record);
-    const key = `${normalized.person}-${normalized.moment_date}`;
+    const key = getSlotKey(normalized);
     if (seen.has(key)) return;
     seen.add(key);
     merged.push(normalized);
@@ -205,8 +242,14 @@ function mergeRecords(primary, secondary) {
   return trimRecords(merged);
 }
 
-function getTodayRecordForPerson(person) {
-  return state.records.find((record) => record.person === person && record.moment_date === getTodayString()) || null;
+function getTodayRecordsForPerson(person) {
+  return state.records
+    .filter((record) => record.person === person && record.moment_date === getTodayString())
+    .sort((left, right) => left.puzzle_slot - right.puzzle_slot);
+}
+
+function getTodayRecordForPerson(person, slot = state.currentSlot) {
+  return getTodayRecordsForPerson(person).find((record) => record.puzzle_slot === slot) || null;
 }
 
 function getSelectedRecord() {
@@ -215,7 +258,10 @@ function getSelectedRecord() {
 
 function pickDefaultRecord() {
   const opposite = PEOPLE.find((person) => person !== state.identity);
-  return state.records.find((record) => record.person === opposite) || state.records[0] || null;
+  const unsolvedRecord = state.records.find(
+    (record) => record.person === opposite && !record[getSolvedAtField(state.identity)]
+  );
+  return unsolvedRecord || state.records.find((record) => record.person === opposite) || state.records[0] || null;
 }
 
 function refreshSelectedRecord() {
@@ -236,8 +282,10 @@ function renderAll() {
 }
 
 function renderComposer() {
-  const todayRecord = getTodayRecordForPerson(state.identity);
+  const todayRecords = getTodayRecordsForPerson(state.identity);
+  const todayRecord = getTodayRecordForPerson(state.identity, state.currentSlot);
   const previewSource = state.previewUrl || todayRecord?.image_url || "";
+  const countText = `${todayRecords.length} / ${MAX_PER_DAY}`;
 
   if (previewSource) {
     elements.uploadPreview.src = previewSource;
@@ -249,14 +297,15 @@ function renderComposer() {
   }
 
   if (todayRecord) {
-    elements.todayRecordTitle.textContent = `${state.identity}今天已经藏好一张`;
-    elements.uploadStatusText.textContent = `上次保存时间：${formatDateTime(todayRecord.created_at)}。可以换图，也可以只改下面那句留言。`;
+    elements.todayRecordTitle.textContent = `${state.identity}今天第 ${state.currentSlot} 张已经藏好`;
+    elements.uploadStatusText.textContent = `今天已放 ${countText} 张。上次保存时间：${formatDateTime(todayRecord.created_at)}，可以换图，也可以只改留言。`;
     elements.deleteTodayButton.disabled = false;
     if (!state.previewUrl) elements.noteInput.value = todayRecord.note || "";
   } else {
-    elements.todayRecordTitle.textContent = "今天还没藏图";
-    elements.uploadStatusText.textContent = "选一张照片就能开始。已经传过的话，也可以换图或者只改留言。";
+    elements.todayRecordTitle.textContent = `今天第 ${state.currentSlot} 张还空着`;
+    elements.uploadStatusText.textContent = `今天已放 ${countText} 张。选一张照片就能开始，今天最多可以放 2 张。`;
     elements.deleteTodayButton.disabled = true;
+    if (!state.previewUrl) elements.noteInput.value = "";
   }
 }
 
@@ -289,11 +338,11 @@ function renderHistory() {
 
     const title = document.createElement("div");
     title.className = "history-title";
-    title.textContent = `${record.person} · ${formatShortDate(record.moment_date)}`;
+    title.textContent = `${record.person} · ${formatShortDate(record.moment_date)} · 第 ${record.puzzle_slot} 张`;
 
     const meta = document.createElement("div");
     meta.className = "history-meta";
-    meta.textContent = `${formatDateTime(record.created_at)} · ${formatBytes(record.image_size)}`;
+    meta.textContent = `${formatDateTime(record.created_at)} · ${formatBytes(record.image_size)} · 已拼开 ${getSolvedCount(record)}/2`;
 
     const note = document.createElement("div");
     note.className = "history-note";
@@ -320,11 +369,12 @@ function renderPuzzleArea() {
   elements.emptyState.hidden = true;
   elements.puzzleWrap.hidden = false;
   elements.reshuffleButton.disabled = false;
-  elements.viewerTitle.textContent = `${record.person} 的 ${formatShortDate(record.moment_date)}`;
+  elements.viewerTitle.textContent = `${record.person} 的 ${formatShortDate(record.moment_date)} · 第 ${record.puzzle_slot} 张`;
   elements.viewerMeta.textContent = `上传于 ${formatDateTime(record.created_at)}${record.image_size ? ` · ${formatBytes(record.image_size)}` : ""}`;
   elements.moveCount.textContent = `已交换 ${state.moves} 次`;
   elements.selectedTip.textContent = state.selectedTile === null ? "还没有选中图块" : `已选中第 ${state.selectedTile + 1} 块，再点另一块交换`;
   elements.deleteSelectedButton.hidden = record.person !== state.identity;
+  renderCompletionStatus(record);
   elements.viewerHint.textContent = state.solved
     ? "已经拼开了，想再玩一次的话可以重新打乱。"
     : "点一块，再点另一块交换位置，把照片拼回去就会揭晓。";
@@ -357,9 +407,35 @@ function renderBoard(record) {
     button.style.backgroundImage = `url("${record.image_url}")`;
     button.style.backgroundSize = "300% 300%";
     button.style.backgroundPosition = `${(piece % 3) * 50}% ${Math.floor(piece / 3) * 50}%`;
-    button.addEventListener("click", () => handlePieceClick(position));
+    button.addEventListener("click", () => {
+      void handlePieceClick(position);
+    });
     elements.puzzleBoard.append(button);
   });
+}
+
+function renderCompletionStatus(record) {
+  updateCompletionPill(elements.haohaoCompletionStatus, Boolean(record.solved_by_haohao_at), record.solved_by_haohao_at);
+  updateCompletionPill(elements.xiuqinCompletionStatus, Boolean(record.solved_by_xiuqin_at), record.solved_by_xiuqin_at);
+}
+
+function getSolvedCount(record) {
+  return Number(Boolean(record.solved_by_haohao_at)) + Number(Boolean(record.solved_by_xiuqin_at));
+}
+
+function updateCompletionPill(element, isDone, solvedAt) {
+  if (!element) return;
+  element.classList.toggle("is-done", isDone);
+  element.textContent = isDone ? `已拼开 · ${formatStatusTime(solvedAt)}` : "还没拼开";
+}
+
+function formatStatusTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
 }
 
 function setupPuzzle(record) {
@@ -391,7 +467,7 @@ function shuffleArray(source) {
   return array;
 }
 
-function handlePieceClick(position) {
+async function handlePieceClick(position) {
   if (state.solved) return;
 
   if (state.selectedTile === null) {
@@ -416,9 +492,45 @@ function handlePieceClick(position) {
   if (state.solved) {
     state.shouldAnimateReveal = true;
     launchHeartBurst();
+    await markPuzzleSolved(getSelectedRecord());
   }
 
   renderPuzzleArea();
+}
+
+async function markPuzzleSolved(record) {
+  if (!record) return;
+
+  const solvedField = getSolvedAtField(state.identity);
+  if (record[solvedField]) return;
+
+  const solvedAt = new Date().toISOString();
+
+  if (state.hasCloud) {
+    try {
+      const { data, error } = await state.supabaseClient
+        .from(DEFAULT_TABLE)
+        .update({ [solvedField]: solvedAt })
+        .eq("id", record.id)
+        .select("*")
+        .single();
+      if (error) throw error;
+      replaceRecordInState(normalizeRecord(data));
+      return;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  replaceRecordInState({
+    ...record,
+    [solvedField]: solvedAt
+  });
+}
+
+function replaceRecordInState(record) {
+  state.records = trimRecords(state.records.map((item) => (item.id === record.id ? normalizeRecord(record) : item)));
+  localStorage.setItem(LOCAL_KEYS.records, JSON.stringify(state.records));
 }
 
 function showRevealState() {
@@ -479,7 +591,7 @@ function handlePreviewChange() {
 async function handleSaveRecord(event) {
   event.preventDefault();
 
-  const existing = getTodayRecordForPerson(state.identity);
+  const existing = getTodayRecordForPerson(state.identity, state.currentSlot);
   const file = elements.photoInput.files?.[0];
   const note = elements.noteInput.value.trim();
 
@@ -496,8 +608,8 @@ async function handleSaveRecord(event) {
     if (file) {
       const compressed = await compressImage(file);
       const uploaded = state.hasCloud
-        ? await saveRecordToCloud(existing, compressed, note)
-        : await saveRecordToLocal(existing, compressed, note);
+        ? await saveRecordToCloud(existing, compressed, note, state.currentSlot)
+        : await saveRecordToLocal(existing, compressed, note, state.currentSlot);
       nextRecord = normalizeRecord(uploaded);
     } else if (existing) {
       nextRecord = state.hasCloud ? await updateCloudNote(existing, note) : updateLocalNote(existing, note);
@@ -526,9 +638,11 @@ async function handleSaveRecord(event) {
 
 function setSavingState(isSaving, text = "") {
   elements.submitButton.disabled = isSaving;
-  elements.deleteTodayButton.disabled = isSaving || !getTodayRecordForPerson(state.identity);
+  elements.deleteTodayButton.disabled = isSaving || !getTodayRecordForPerson(state.identity, state.currentSlot);
   elements.deleteSelectedButton.disabled = isSaving;
   elements.reshuffleButton.disabled = isSaving || !getSelectedRecord();
+  elements.slotOneButton.disabled = isSaving;
+  elements.slotTwoButton.disabled = isSaving;
   if (text) elements.saveStatus.textContent = text;
 }
 
@@ -598,9 +712,9 @@ function renderWebp(image, width, height, quality) {
   });
 }
 
-async function saveRecordToCloud(existing, compressed, note) {
+async function saveRecordToCloud(existing, compressed, note, slot) {
   const today = getTodayString();
-  const path = `tiny-moments/${today}/${personKey(state.identity)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
+  const path = `tiny-moments/${today}/${personKey(state.identity)}-slot-${slot}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
 
   const { error: uploadError } = await state.supabaseClient.storage
     .from(config.bucketName)
@@ -612,6 +726,7 @@ async function saveRecordToCloud(existing, compressed, note) {
   const payload = {
     person: state.identity,
     moment_date: today,
+    puzzle_slot: slot,
     note,
     image_path: path,
     image_url: publicData.publicUrl,
@@ -643,12 +758,13 @@ async function saveRecordToCloud(existing, compressed, note) {
   return savedRecord;
 }
 
-async function saveRecordToLocal(existing, compressed, note) {
+async function saveRecordToLocal(existing, compressed, note, slot) {
   const dataUrl = await fileToDataUrl(compressed.file);
   const payload = normalizeRecord({
     id: existing?.id || crypto.randomUUID(),
     person: state.identity,
     moment_date: getTodayString(),
+    puzzle_slot: slot,
     note,
     image_path: "",
     image_url: dataUrl,
@@ -725,7 +841,7 @@ async function deleteRecord(record) {
     }
 
     refreshSelectedRecord();
-    elements.noteInput.value = getTodayRecordForPerson(state.identity)?.note || "";
+    elements.noteInput.value = getTodayRecordForPerson(state.identity, state.currentSlot)?.note || "";
     elements.photoInput.value = "";
     clearPreviewUrl();
     elements.saveStatus.textContent = state.hasCloud ? "这张小瞬间已经从云端删除。" : "这张小瞬间已经从本地预览里删除。";
