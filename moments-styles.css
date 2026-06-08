@@ -684,12 +684,20 @@ textarea:focus,
   display: grid;
   gap: 10px;
   padding: 12px;
-  text-align: left;
   border: 1px solid var(--line);
   transition:
     transform 160ms ease,
     border-color 160ms ease,
     background 160ms ease;
+}
+
+.history-select-button {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  background: transparent;
 }
 
 .history-item:hover {
@@ -709,6 +717,28 @@ textarea:focus,
   background: linear-gradient(135deg, rgba(212, 111, 136, 0.12), rgba(242, 180, 106, 0.14));
 }
 
+.history-thumb-locked {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 18px;
+  color: #8f796d;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.3)),
+    linear-gradient(135deg, rgba(212, 111, 136, 0.14), rgba(242, 180, 106, 0.18));
+}
+
+.history-thumb-locked span {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.history-thumb-locked small {
+  line-height: 1.6;
+  text-align: center;
+}
+
 .history-title {
   font-weight: 700;
 }
@@ -724,6 +754,21 @@ textarea:focus,
   line-height: 1.6;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.history-delete-button {
+  justify-self: start;
+  min-height: 36px;
+  padding: 0.58rem 0.9rem;
+  border: 1px solid rgba(182, 80, 105, 0.16);
+  border-radius: 999px;
+  color: var(--rose-dark);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.history-delete-button:hover {
+  transform: translateY(-1px);
 }
 
 @keyframes heartFloat {

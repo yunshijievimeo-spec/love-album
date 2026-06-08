@@ -321,20 +321,32 @@ function renderHistory() {
   }
 
   state.records.forEach((record) => {
+    const article = document.createElement("article");
+    article.className = `history-item${record.id === state.selectedId ? " is-active" : ""}`;
+
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `history-item${record.id === state.selectedId ? " is-active" : ""}`;
+    button.className = "history-select-button";
     button.addEventListener("click", () => {
       state.selectedId = record.id;
       setupPuzzle(record);
       renderAll();
     });
 
-    const thumb = document.createElement("img");
-    thumb.className = "history-thumb";
-    thumb.alt = `${record.person} 的小瞬间`;
-    thumb.src = record.image_url;
-    thumb.loading = "lazy";
+    const isUnlocked = isRecordUnlockedForViewer(record);
+    let thumb = null;
+
+    if (isUnlocked) {
+      thumb = document.createElement("img");
+      thumb.className = "history-thumb";
+      thumb.alt = `${record.person} 的小瞬间`;
+      thumb.src = record.image_url;
+      thumb.loading = "lazy";
+    } else {
+      thumb = document.createElement("div");
+      thumb.className = "history-thumb history-thumb-locked";
+      thumb.innerHTML = "<span>待拼开</span><small>先去上面把这张拼图解锁</small>";
+    }
 
     const title = document.createElement("div");
     title.className = "history-title";
@@ -342,14 +354,29 @@ function renderHistory() {
 
     const meta = document.createElement("div");
     meta.className = "history-meta";
-    meta.textContent = `${formatDateTime(record.created_at)} · ${formatBytes(record.image_size)} · 已拼开 ${getSolvedCount(record)}/2`;
+    meta.textContent = isUnlocked
+      ? `${formatDateTime(record.created_at)} · ${formatBytes(record.image_size)} · 已拼开 ${getSolvedCount(record)}/2`
+      : `${formatDateTime(record.created_at)} · 等你先拼开`;
 
     const note = document.createElement("div");
     note.className = "history-note";
-    note.textContent = record.note || "拼开后，会看到留给你的那一句话。";
+    note.textContent = isUnlocked ? record.note || "拼开后，会看到留给你的那一句话。" : "这张还没有对你揭晓，先去拼图区把它拼开吧。";
 
     button.append(thumb, title, meta, note);
-    elements.historyList.append(button);
+    article.append(button);
+
+    if (record.person === state.identity) {
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "history-delete-button";
+      deleteButton.textContent = "删除这张";
+      deleteButton.addEventListener("click", async () => {
+        await deleteRecord(record);
+      });
+      article.append(deleteButton);
+    }
+
+    elements.historyList.append(article);
   });
 }
 
@@ -421,6 +448,11 @@ function renderCompletionStatus(record) {
 
 function getSolvedCount(record) {
   return Number(Boolean(record.solved_by_haohao_at)) + Number(Boolean(record.solved_by_xiuqin_at));
+}
+
+function isRecordUnlockedForViewer(record) {
+  if (record.person === state.identity) return true;
+  return Boolean(record[getSolvedAtField(state.identity)]);
 }
 
 function updateCompletionPill(element, isDone, solvedAt) {
