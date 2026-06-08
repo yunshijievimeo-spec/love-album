@@ -988,7 +988,9 @@ function renderGarden() {
 
 function getGardenStats() {
   const today = getTodayKey();
-  const totalWater = state.gardenRows.reduce((sum, item) => sum + Number(item.count || 0), 0);
+  const initialCreditDays = Math.max(0, (GARDEN_TIMELINE_START?.day || 1) - 1);
+  const initialCreditWater = initialCreditDays * GARDEN_DAILY_LIMIT_TOTAL;
+  const totalWater = state.gardenRows.reduce((sum, item) => sum + Number(item.count || 0), 0) + initialCreditWater;
   const cappedTotalWater = Math.min(totalWater, GARDEN_WATER_PER_BLOOM * GARDEN_MAX_BLOOMS);
   const openBlooms = Math.min(GARDEN_MAX_BLOOMS, Math.floor(cappedTotalWater / GARDEN_WATER_PER_BLOOM));
   const currentProgress =
@@ -1378,7 +1380,9 @@ function renderGarden() {
 
 function getGardenStats() {
   const today = getTodayKey();
-  const totalWater = state.gardenRows.reduce((sum, item) => sum + Number(item.count || 0), 0);
+  const initialCreditDays = Math.max(0, (GARDEN_TIMELINE_START?.day || 1) - 1);
+  const initialCreditWater = initialCreditDays * GARDEN_DAILY_LIMIT_TOTAL;
+  const totalWater = state.gardenRows.reduce((sum, item) => sum + Number(item.count || 0), 0) + initialCreditWater;
   const cappedTotalWater = Math.min(totalWater, GARDEN_WATER_PER_BLOOM * GARDEN_MAX_BLOOMS);
   const completedMonths = Math.min(GARDEN_MAX_BLOOMS, Math.floor(cappedTotalWater / GARDEN_WATER_PER_BLOOM));
   const currentProgress =
