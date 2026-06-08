@@ -119,5 +119,7 @@
     elements.lampButton.addEventListener("click", handleLampSubmit);
   }
 
-  hydrateLamps();
+  if (!state.isBooting) {
+    hydrateLamps();
+  }
 })();

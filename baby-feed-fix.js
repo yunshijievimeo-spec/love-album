@@ -318,7 +318,7 @@
     const rows = await fetchBabyFeedRows({
       orderColumn: "created_at",
       ascending: true,
-      limit: 500
+      limit: 160
     });
 
     state.babyRows = rows;
@@ -331,7 +331,7 @@
       : await fetchBabyFeedRows({
           orderColumn: "created_at",
           ascending: true,
-          limit: 500
+          limit: 160
         });
 
     state.babyRows = rows;
@@ -367,5 +367,7 @@
   }
 
   window.addEventListener("beforeunload", clearBabyAmbientTimer);
-  hydrateBabyFeeds();
+  if (!state.isBooting) {
+    hydrateBabyFeeds();
+  }
 })();

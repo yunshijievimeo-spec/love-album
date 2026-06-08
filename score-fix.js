@@ -37,9 +37,12 @@
     if (error) {
       console.error(error);
       rememberScoreLocally(payload);
-      state.hasSupabase = false;
       setModeStatus("\u4eca\u65e5\u60f3\u4f60\u503c\u4e91\u7aef\u540c\u6b65\u6682\u65f6\u5931\u8d25\uff0c\u5f53\u524d\u5148\u5207\u5230\u672c\u5730\u6a21\u5f0f\u3002");
+      invalidateRowsCache(tableNames.scores);
+      return;
     }
+
+    invalidateRowsCache(tableNames.scores);
   }
 
   syncScorePreview = function syncScorePreview() {
@@ -147,5 +150,7 @@
     elements.scoreInput.addEventListener("input", syncScorePreview);
   }
 
-  hydrateScores();
+  if (!state.isBooting) {
+    hydrateScores();
+  }
 })();

@@ -41,16 +41,20 @@
         ascending: false,
         limit: 12
       }),
-      fetchRows(tableNames.gardenWatering, localKeys.gardenWatering, {
-        orderColumn: "created_at",
-        ascending: false,
-        limit: 20
-      }),
-      fetchBabyFeedRows({
-        orderColumn: "created_at",
-        ascending: false,
-        limit: 20
-      })
+      state.gardenRows.length
+        ? Promise.resolve(state.gardenRows)
+        : fetchRows(tableNames.gardenWatering, localKeys.gardenWatering, {
+            orderColumn: "created_at",
+            ascending: false,
+            limit: 20
+          }),
+      state.babyRows.length
+        ? Promise.resolve(state.babyRows)
+        : fetchBabyFeedRows({
+            orderColumn: "created_at",
+            ascending: false,
+            limit: 20
+          })
     ]);
 
     const todayHugs = hugRows.filter((item) => item.action_date === today);

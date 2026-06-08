@@ -11,6 +11,9 @@ const localKeys = {
   identity: "love-room-identity"
 };
 
+const ROW_CACHE_TTL_MS = 12000;
+const AUTO_REFRESH_INTERVAL_MS = 20000;
+
 const tableNames = {
   hugs: config.hugTableName || "couple_hugs",
   lamps: config.lampTableName || "couple_goodnight_lamps",
@@ -66,8 +69,13 @@ const state = {
   gardenRows: [],
   babyRows: [],
   babyFeedSyncMode: Boolean(config.supabaseUrl && config.supabaseAnonKey && window.supabase) ? "cloud" : "local",
-  syncFallbackNoticeShown: false
+  syncFallbackNoticeShown: false,
+  isBooting: true,
+  refreshPromise: null
 };
+
+const rowRequestCache = new Map();
+let autoRefreshTimer = 0;
 
 state.identity = normalizeIdentity(state.identity);
 
@@ -144,11 +152,12 @@ async function bootRoom() {
   bindEvents();
   await ensureSyncQuestion();
   await refreshAll();
+  startAutoRefreshLoop();
 }
 
 function bindEvents() {
   elements.identitySelect.addEventListener("change", handleIdentityChange);
-  elements.refreshAllButton.addEventListener("click", refreshAll);
+  elements.refreshAllButton.addEventListener("click", () => refreshAll({ force: true }));
   elements.clearLocalCacheButton.addEventListener("click", clearLocalCache);
   elements.hugButton.addEventListener("click", handleHugSubmit);
   elements.lampButton.addEventListener("click", handleLampSubmit);
@@ -160,6 +169,8 @@ function bindEvents() {
   elements.waterOneButton.addEventListener("click", () => handleGardenWater(1));
   elements.waterTwoButton.addEventListener("click", () => handleGardenWater(2));
   elements.babyFeedButton?.addEventListener("click", handleBabyFeed);
+  window.addEventListener("focus", handleRoomVisibilityRefresh);
+  document.addEventListener("visibilitychange", handleRoomVisibilityRefresh);
 }
 
 function syncIdentityUi() {
@@ -199,18 +210,60 @@ function setModeStatus(message) {
   elements.modeHint.textContent = message || "濡傛灉浜戠琛ㄨ繕娌″缓濂斤紝椤甸潰浼氬厛閫€鍥炲綋鍓嶈澶囨湰鍦颁繚瀛樸€?;
 }
 
-async function refreshAll() {
-  setModeStatus();
-  await Promise.all([
-    hydrateHugs(),
-    hydrateLamps(),
-    hydrateScores(),
-    hydrateSyncRound(),
-    hydrateCapsules(),
-    hydrateGarden(),
-    hydrateBabyFeeds(),
-    typeof hydrateHeroBoard === "function" ? hydrateHeroBoard() : Promise.resolve()
-  ]);
+function handleRoomVisibilityRefresh() {
+  if (document.hidden) {
+    return;
+  }
+
+  refreshAll({ force: true });
+}
+
+function startAutoRefreshLoop() {
+  if (autoRefreshTimer) {
+    window.clearInterval(autoRefreshTimer);
+  }
+
+  autoRefreshTimer = window.setInterval(() => {
+    if (document.hidden) {
+      return;
+    }
+
+    refreshAll({ force: true });
+  }, AUTO_REFRESH_INTERVAL_MS);
+}
+
+async function refreshAll(options = {}) {
+  if (options.force) {
+    invalidateRowsCache();
+  }
+
+  if (state.refreshPromise) {
+    return state.refreshPromise;
+  }
+
+  state.refreshPromise = (async () => {
+    setModeStatus();
+    await Promise.all([
+      hydrateHugs(),
+      hydrateLamps(),
+      hydrateScores(),
+      hydrateSyncRound(),
+      hydrateCapsules(),
+      hydrateGarden(),
+      hydrateBabyFeeds()
+    ]);
+
+    if (typeof hydrateHeroBoard === "function") {
+      await hydrateHeroBoard();
+    }
+  })();
+
+  try {
+    await state.refreshPromise;
+  } finally {
+    state.refreshPromise = null;
+    state.isBooting = false;
+  }
 }
 
 function getTodayKey() {
@@ -548,7 +601,16 @@ async function fetchBabyFeedRows(options = {}) {
     query = query.limit(options.limit);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await (async () => {
+    try {
+      return {
+        data: await fetchRemoteRowsWithCache(tableNames.babyFeeds, options, async () => query),
+        error: null
+      };
+    } catch (error) {
+      return { data: null, error };
+    }
+  })();
   if (error) {
     state.babyFeedSyncMode = "local";
     return sortLocalRows(readJson(localKeys.babyFeeds, []), options);
@@ -598,11 +660,13 @@ async function insertBabyFeedRow(payload) {
     const rows = readJson(localKeys.babyFeeds, []);
     rows.push(payload);
     writeJson(localKeys.babyFeeds, rows);
+    invalidateRowsCache(tableNames.babyFeeds);
     state.babyFeedSyncMode = "local";
     return;
   }
 
   const { error } = await state.supabase.from(tableNames.babyFeeds).insert(payload);
+  invalidateRowsCache(tableNames.babyFeeds);
   if (error) {
     const rows = readJson(localKeys.babyFeeds, []);
     rows.push(payload);
@@ -1054,6 +1118,61 @@ async function findTodayPersonRow(tableName, localKey, dateKey, person) {
   );
 }
 
+function getRowCacheKey(tableName, options = {}) {
+  const orderColumn = options.orderColumn || "";
+  const sortDirection = options.ascending ? "asc" : "desc";
+  const limit = options.limit || "all";
+  return `${tableName}::${orderColumn}::${sortDirection}::${limit}`;
+}
+
+function invalidateRowsCache(tableName = "") {
+  for (const key of rowRequestCache.keys()) {
+    if (!tableName || key.startsWith(`${tableName}::`)) {
+      rowRequestCache.delete(key);
+    }
+  }
+}
+
+async function fetchRemoteRowsWithCache(tableName, options, buildQuery) {
+  const cacheKey = getRowCacheKey(tableName, options);
+  const now = Date.now();
+  const cached = rowRequestCache.get(cacheKey);
+
+  if (cached?.data && now - cached.ts < ROW_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  if (cached?.promise) {
+    return cached.promise;
+  }
+
+  const requestPromise = (async () => {
+    const { data, error } = await buildQuery();
+    if (error) {
+      throw error;
+    }
+
+    const nextData = data || [];
+    rowRequestCache.set(cacheKey, {
+      data: nextData,
+      ts: Date.now()
+    });
+    return nextData;
+  })();
+
+  rowRequestCache.set(cacheKey, {
+    promise: requestPromise,
+    ts: now
+  });
+
+  try {
+    return await requestPromise;
+  } catch (error) {
+    rowRequestCache.delete(cacheKey);
+    throw error;
+  }
+}
+
 async function fetchRows(tableName, localKey, options = {}) {
   if (!state.hasSupabase) {
     return sortLocalRows(readJson(localKey, []), options);
@@ -1067,10 +1186,18 @@ async function fetchRows(tableName, localKey, options = {}) {
     query = query.limit(options.limit);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await (async () => {
+    try {
+      return {
+        data: await fetchRemoteRowsWithCache(tableName, options, async () => query),
+        error: null
+      };
+    } catch (error) {
+      return { data: null, error };
+    }
+  })();
   if (error) {
     console.error(error);
-    state.hasSupabase = false;
     setModeStatus(`浜戠琛?${tableName} 杩樻病鍑嗗濂斤紝褰撳墠鍏堝垏鍒版湰鍦版ā寮忋€俙);
     return sortLocalRows(readJson(localKey, []), options);
   }
@@ -1081,10 +1208,12 @@ async function fetchRows(tableName, localKey, options = {}) {
 async function insertRow(tableName, localKey, payload) {
   if (!state.hasSupabase) {
     fallbackInsertToLocal(localKey, payload);
+    invalidateRowsCache(tableName);
     return;
   }
 
   const { error } = await state.supabase.from(tableName).insert(payload);
+  invalidateRowsCache(tableName);
   if (error) {
     console.error(error);
     window.alert(`浜戠鍐欏叆澶辫触锛?{tableName} 鍙兘杩樻病鏈夊缓濂斤紝璇峰厛鎵ц鏂扮殑 SQL銆俙);
@@ -1094,10 +1223,12 @@ async function insertRow(tableName, localKey, payload) {
 async function updateRow(tableName, localKey, id, patch) {
   if (!state.hasSupabase) {
     fallbackUpdateToLocal(localKey, id, patch);
+    invalidateRowsCache(tableName);
     return;
   }
 
   const { error } = await state.supabase.from(tableName).update(patch).eq("id", id);
+  invalidateRowsCache(tableName);
   if (error) {
     console.error(error);
     window.alert(`浜戠鏇存柊澶辫触锛?{tableName} 鐨勬洿鏂版潈闄愬彲鑳借繕娌℃墦寮€銆俙);
@@ -1106,6 +1237,7 @@ async function updateRow(tableName, localKey, id, patch) {
 
 function clearLocalCache() {
   Object.values(localKeys).forEach((key) => localStorage.removeItem(key));
+  invalidateRowsCache();
   state.identity = "鍙峰彿";
   syncIdentityUi();
   refreshAll();
