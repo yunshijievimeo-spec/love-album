@@ -691,9 +691,9 @@ async function markPuzzleSolved(record) {
         .update({ [solvedField]: solvedAt })
         .eq("id", record.id)
         .select("*")
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      replaceRecordInState(normalizeRecord(data));
+      replaceRecordInState(normalizeRecord(data || { ...record, [solvedField]: solvedAt }));
       return;
     } catch (error) {
       console.error(error);
@@ -952,15 +952,18 @@ async function saveRecordToCloud(existing, compressed, note, slot) {
         .update(payload)
         .eq("id", existing.id)
         .select("*")
-        .single();
+        .maybeSingle();
       if (error) throw createMomentSaveError("table-update", error);
-      savedRecord = data;
+      savedRecord = data || (await fetchCloudRecordBySlot(today, slot, state.identity));
+      if (!savedRecord) {
+        throw createMomentSaveError("table-update", new Error("updated row could not be reloaded"));
+      }
 
       if (existing.image_path && existing.image_path !== path) {
         await state.supabaseClient.storage.from(config.bucketName).remove([existing.image_path]);
       }
     } else {
-      const { data, error } = await state.supabaseClient.from(DEFAULT_TABLE).insert(payload).select("*").single();
+      const { data, error } = await state.supabaseClient.from(DEFAULT_TABLE).insert(payload).select("*").maybeSingle();
       if (error) {
         if (isMomentSlotConflict(error)) {
           const cloudExisting = await fetchCloudRecordBySlot(today, slot, state.identity);
@@ -971,10 +974,13 @@ async function saveRecordToCloud(existing, compressed, note, slot) {
             .update(payload)
             .eq("id", cloudExisting.id)
             .select("*")
-            .single();
+            .maybeSingle();
 
           if (fallbackError) throw createMomentSaveError("table-update", fallbackError);
-          savedRecord = fallbackData;
+          savedRecord = fallbackData || (await fetchCloudRecordBySlot(today, slot, state.identity));
+          if (!savedRecord) {
+            throw createMomentSaveError("table-update", new Error("fallback row could not be reloaded"));
+          }
 
           if (cloudExisting.image_path && cloudExisting.image_path !== path) {
             await state.supabaseClient.storage.from(config.bucketName).remove([cloudExisting.image_path]);
@@ -983,7 +989,10 @@ async function saveRecordToCloud(existing, compressed, note, slot) {
           throw createMomentSaveError("table-insert", error);
         }
       } else {
-        savedRecord = data;
+        savedRecord = data || (await fetchCloudRecordBySlot(today, slot, state.identity));
+        if (!savedRecord) {
+          throw createMomentSaveError("table-insert", new Error("inserted row could not be reloaded"));
+        }
       }
     }
 
@@ -1021,9 +1030,9 @@ async function updateCloudNote(existing, note) {
     .update({ note })
     .eq("id", existing.id)
     .select("*")
-    .single();
+    .maybeSingle();
   if (error) throw error;
-  return normalizeRecord(data);
+  return normalizeRecord(data || { ...existing, note });
 }
 
 function isMomentSlotConflict(error) {
