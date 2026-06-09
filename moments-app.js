@@ -1106,7 +1106,8 @@ async function refreshRecords() {
 
   if (error) throw error;
 
-  state.records = mergeRecords(data || [], readLocalRecords());
+  state.records = trimRecords((data || []).map(normalizeRecord));
+  localStorage.setItem(LOCAL_KEYS.records, JSON.stringify(state.records));
 }
 
 async function syncMomentsFromCloud() {
