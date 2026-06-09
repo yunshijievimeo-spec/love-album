@@ -777,7 +777,7 @@ function handlePreviewChange() {
 async function handleSaveRecord(event) {
   event.preventDefault();
 
-  const existing = getTodayRecordForPerson(state.identity, state.currentSlot);
+  let existing = getTodayRecordForPerson(state.identity, state.currentSlot);
   const file = elements.photoInput.files?.[0];
   const note = elements.noteInput.value.trim();
 
@@ -789,6 +789,15 @@ async function handleSaveRecord(event) {
   setSavingState(true, "正在整理和压缩照片...");
 
   try {
+    if (state.hasCloud) {
+      try {
+        await refreshRecords();
+        existing = getTodayRecordForPerson(state.identity, state.currentSlot);
+      } catch (refreshError) {
+        console.error(refreshError);
+      }
+    }
+
     let nextRecord = existing ? { ...existing, note } : null;
 
     if (file) {
@@ -827,7 +836,7 @@ async function handleSaveRecord(event) {
   } catch (error) {
     console.error(error);
     elements.saveStatus.textContent = state.hasCloud
-      ? "云端保存失败了，先检查表和存储权限。"
+      ? formatMomentSaveError(error)
       : "本地保存失败了，可以换张图再试一次。";
   } finally {
     setSavingState(false);
@@ -912,14 +921,13 @@ function renderWebp(image, width, height, quality) {
 
 async function saveRecordToCloud(existing, compressed, note, slot) {
   const today = getTodayString();
-  const serverExisting = existing || (await fetchCloudRecordBySlot(today, slot, state.identity));
   const path = `tiny-moments/${today}/${personKey(state.identity)}-slot-${slot}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
 
   const { error: uploadError } = await state.supabaseClient.storage
     .from(config.bucketName)
     .upload(path, compressed.file, { cacheControl: "3600", upsert: false });
 
-  if (uploadError) throw uploadError;
+  if (uploadError) throw createMomentSaveError("storage-upload", uploadError);
 
   const { data: publicData } = state.supabaseClient.storage.from(config.bucketName).getPublicUrl(path);
   const payload = {
@@ -936,49 +944,54 @@ async function saveRecordToCloud(existing, compressed, note, slot) {
     solved_by_xiuqin_at: null
   };
 
-  let savedRecord = null;
-  if (serverExisting) {
-    const { data, error } = await state.supabaseClient
-      .from(DEFAULT_TABLE)
-      .update(payload)
-      .eq("id", serverExisting.id)
-      .select("*")
-      .single();
-    if (error) throw error;
-    savedRecord = data;
+  try {
+    let savedRecord = null;
+    if (existing) {
+      const { data, error } = await state.supabaseClient
+        .from(DEFAULT_TABLE)
+        .update(payload)
+        .eq("id", existing.id)
+        .select("*")
+        .single();
+      if (error) throw createMomentSaveError("table-update", error);
+      savedRecord = data;
 
-    if (serverExisting.image_path && serverExisting.image_path !== path) {
-      await state.supabaseClient.storage.from(config.bucketName).remove([serverExisting.image_path]);
-    }
-  } else {
-    const { data, error } = await state.supabaseClient.from(DEFAULT_TABLE).insert(payload).select("*").single();
-    if (error) {
-      if (isMomentSlotConflict(error)) {
-        const cloudExisting = await fetchCloudRecordBySlot(today, slot, state.identity);
-        if (!cloudExisting) throw error;
-
-        const { data: fallbackData, error: fallbackError } = await state.supabaseClient
-          .from(DEFAULT_TABLE)
-          .update(payload)
-          .eq("id", cloudExisting.id)
-          .select("*")
-          .single();
-
-        if (fallbackError) throw fallbackError;
-        savedRecord = fallbackData;
-
-        if (cloudExisting.image_path && cloudExisting.image_path !== path) {
-          await state.supabaseClient.storage.from(config.bucketName).remove([cloudExisting.image_path]);
-        }
-      } else {
-        throw error;
+      if (existing.image_path && existing.image_path !== path) {
+        await state.supabaseClient.storage.from(config.bucketName).remove([existing.image_path]);
       }
     } else {
-      savedRecord = data;
-    }
-  }
+      const { data, error } = await state.supabaseClient.from(DEFAULT_TABLE).insert(payload).select("*").single();
+      if (error) {
+        if (isMomentSlotConflict(error)) {
+          const cloudExisting = await fetchCloudRecordBySlot(today, slot, state.identity);
+          if (!cloudExisting) throw createMomentSaveError("table-insert", error);
 
-  return savedRecord;
+          const { data: fallbackData, error: fallbackError } = await state.supabaseClient
+            .from(DEFAULT_TABLE)
+            .update(payload)
+            .eq("id", cloudExisting.id)
+            .select("*")
+            .single();
+
+          if (fallbackError) throw createMomentSaveError("table-update", fallbackError);
+          savedRecord = fallbackData;
+
+          if (cloudExisting.image_path && cloudExisting.image_path !== path) {
+            await state.supabaseClient.storage.from(config.bucketName).remove([cloudExisting.image_path]);
+          }
+        } else {
+          throw createMomentSaveError("table-insert", error);
+        }
+      } else {
+        savedRecord = data;
+      }
+    }
+
+    return savedRecord;
+  } catch (error) {
+    await state.supabaseClient.storage.from(config.bucketName).remove([path]);
+    throw error;
+  }
 }
 
 async function saveRecordToLocal(existing, compressed, note, slot) {
@@ -1016,6 +1029,37 @@ async function updateCloudNote(existing, note) {
 function isMomentSlotConflict(error) {
   const message = String(error?.message || "").toLowerCase();
   return error?.code === "23505" || message.includes("couple_moment_puzzles_person_date_slot_uidx");
+}
+
+function createMomentSaveError(step, error) {
+  const wrapped = new Error(error?.message || "unknown");
+  wrapped.step = step;
+  wrapped.code = error?.code || "";
+  wrapped.details = error?.details || "";
+  wrapped.hint = error?.hint || "";
+  wrapped.cause = error;
+  return wrapped;
+}
+
+function formatMomentSaveError(error) {
+  const detail = [error?.code, error?.details, error?.hint, error?.message]
+    .filter(Boolean)
+    .map((item) => String(item).trim())
+    .find(Boolean);
+
+  if (error?.step === "storage-upload") {
+    return detail
+      ? `图片上传被云端拦住了：${detail}`
+      : "图片上传被云端拦住了，优先检查 love-photos 存储桶权限。";
+  }
+
+  if (error?.step === "table-insert" || error?.step === "table-update") {
+    return detail
+      ? `图片传上去了，但写入拼图表失败：${detail}`
+      : "图片传上去了，但写入拼图表失败，优先检查 couple_moment_puzzles 表权限。";
+  }
+
+  return detail ? `云端保存失败：${detail}` : "云端保存失败了，先检查表和存储权限。";
 }
 
 async function fetchCloudRecordBySlot(date, slot, person) {
