@@ -519,6 +519,22 @@ textarea:focus,
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
+.hero-link-morning {
+  color: #fff;
+  border-color: rgba(222, 103, 142, 0.28);
+  background:
+    linear-gradient(145deg, #f08daf 0%, #ea729b 52%, #db5e86 100%);
+  box-shadow:
+    0 16px 28px rgba(219, 94, 134, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.hero-link-morning:hover {
+  box-shadow:
+    0 20px 34px rgba(219, 94, 134, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
 .hero-lock-button {
   color: var(--ink);
   border-color: rgba(126, 108, 97, 0.2);
@@ -577,6 +593,22 @@ textarea:focus,
 .hero-actions .hero-link-moments:hover {
   box-shadow:
     0 20px 34px rgba(215, 128, 86, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.hero-actions .hero-link-morning {
+  color: #fff;
+  border-color: rgba(222, 103, 142, 0.28);
+  background:
+    linear-gradient(145deg, #f08daf 0%, #ea729b 52%, #db5e86 100%);
+  box-shadow:
+    0 16px 28px rgba(219, 94, 134, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.hero-actions .hero-link-morning:hover {
+  box-shadow:
+    0 20px 34px rgba(219, 94, 134, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 

@@ -17,5 +17,6 @@ window.LOVE_ALBUM_CONFIG = {
   capsuleTableName: "couple_capsules",
   gardenWaterTableName: "couple_garden_watering",
   babyFeedTableName: "couple_baby_feeds",
-  momentPuzzleTableName: "couple_moment_puzzles"
+  momentPuzzleTableName: "couple_moment_puzzles",
+  morningVoiceTableName: "couple_morning_voices"
 };

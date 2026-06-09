@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>早安的小甜音</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./morning-voice.css" />
+  </head>
+  <body>
+    <main class="morning-shell">
+      <section class="morning-hero">
+        <div class="morning-hero-copy">
+          <p class="eyebrow">Morning Voice Ritual</p>
+          <h1>早安的小甜音</h1>
+          <p class="hero-text">
+            每天早上，一人留一句不超过 30 秒的小甜音。点开后卡片会慢慢展开，小太阳亮一点，爱心和音符轻轻飘起来。
+          </p>
+        </div>
+
+        <div class="morning-hero-side">
+          <div class="sync-card">
+            <span>当前同步状态</span>
+            <strong id="syncModeBadge">本地预览准备中</strong>
+            <small id="syncModeHint">先把今天的小甜音准备好，再尝试连上云端。</small>
+          </div>
+
+          <label class="identity-field" for="identitySelect">
+            <span>今天是谁来留早安</span>
+            <select id="identitySelect">
+              <option value="号号">号号</option>
+              <option value="秀琴">秀琴</option>
+            </select>
+          </label>
+
+          <div class="hero-actions">
+            <a class="soft-button ghost" href="./index.html">返回小天地</a>
+            <a class="soft-button" href="./chat.html">去爱的小屋</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="morning-layout">
+        <article class="voice-card record-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Record</p>
+              <h2>留给对方的第一句早安</h2>
+            </div>
+            <span id="todayBadge" class="date-badge"></span>
+          </div>
+
+          <p class="card-text">每天每人 1 条，最多 30 秒。只保留当天，过了今天就会自动换成新的一句。</p>
+
+          <div id="recordSun" class="sun-scene">
+            <div class="sun-halo"></div>
+            <div class="sun-core"></div>
+            <div class="sun-rays">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="sun-cloud left"></div>
+            <div class="sun-cloud right"></div>
+          </div>
+
+          <div class="record-controls">
+            <div class="record-status-box">
+              <strong id="recordSummaryTitle">今天还没录早安</strong>
+              <p id="recordSummaryText">点下面的按钮开始录制，录完就会自动保存成今天这句小甜音。</p>
+            </div>
+
+            <div class="record-buttons">
+              <button id="recordButton" class="soft-button primary" type="button">开始录音</button>
+              <button id="stopButton" class="soft-button ghost" type="button" disabled>结束录音</button>
+              <button id="deleteButton" class="soft-button ghost" type="button" disabled>删除今天这句</button>
+            </div>
+
+            <div class="record-meter">
+              <span id="recordStateBadge" class="state-pill">等待中</span>
+              <strong id="recordTimer">00:00</strong>
+            </div>
+
+            <audio id="myVoicePlayer" class="voice-player" controls hidden></audio>
+            <p id="recordStatus" class="form-status" role="status"></p>
+          </div>
+        </article>
+
+        <article id="receiveCard" class="voice-card receive-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Receive</p>
+              <h2>收下对方今天的早安</h2>
+            </div>
+            <span id="receiveBadge" class="status-badge">等待中</span>
+          </div>
+
+          <div id="receiveSun" class="sun-scene receive-sun">
+            <div class="sun-halo"></div>
+            <div class="sun-core"></div>
+            <div class="sun-rays">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="sun-cloud left"></div>
+            <div class="sun-cloud right"></div>
+            <div id="receiveEffects" class="receive-effects" aria-hidden="true"></div>
+          </div>
+
+          <div id="receiveEmpty" class="empty-state">
+            <strong>对方今天还没留小甜音</strong>
+            <p>晚一点再来看看，也许一句早安已经在路上了。</p>
+          </div>
+
+          <div id="receiveContent" class="receive-content" hidden>
+            <div class="receive-summary">
+              <strong id="receiveTitle">号号给你留了今天的第一句早安</strong>
+              <p id="receiveText">点一下爱心播放，卡片会慢慢打开，这句早安就会轻轻放出来。</p>
+            </div>
+
+            <div class="receive-actions">
+              <button id="playButton" class="play-heart-button" type="button">
+                <span class="heart-icon">❤</span>
+                <span id="playButtonText">播放小甜音</span>
+              </button>
+              <button id="replyButton" class="soft-button ghost" type="button" hidden>抱抱早安</button>
+            </div>
+
+            <p id="receiveStatus" class="receive-status">今天这句小甜音还在等你拆开。</p>
+            <audio id="receivePlayer" hidden></audio>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="./config.example.js"></script>
+    <script src="./morning-voice.js"></script>
+  </body>
+</html>
