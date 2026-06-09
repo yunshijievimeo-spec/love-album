@@ -648,8 +648,19 @@ async function togglePlayback() {
 
   await markHeard(record);
 
+  state.playingRecordId = record.id;
   elements.receivePlayer.src = src;
-  await elements.receivePlayer.play();
+  launchImmediateParticles();
+
+  try {
+    await elements.receivePlayer.play();
+  } catch (error) {
+    console.error(error);
+    state.playingRecordId = null;
+    stopParticleBurst();
+    elements.receiveStatus.textContent = "这句小甜音刚刚没有放出来，再点一次试试。";
+  }
+
   renderReceiveCard();
 }
 
@@ -758,6 +769,7 @@ function blobToDataUrl(blob) {
 
 function startParticleBurst() {
   stopParticleBurst();
+  launchImmediateParticles();
   state.particleTimer = window.setInterval(() => {
     spawnParticle(Math.random() > 0.45 ? "heart" : "note");
   }, 260);
@@ -772,11 +784,19 @@ function spawnParticle(type) {
   const particle = document.createElement("span");
   particle.className = `float-particle ${type}`;
   particle.textContent = type === "heart" ? "❤" : Math.random() > 0.5 ? "♪" : "♫";
-  particle.style.left = `${34 + Math.random() * 32}%`;
-  particle.style.setProperty("--drift-x", `${-42 + Math.random() * 84}px`);
+  particle.style.left = `${24 + Math.random() * 52}%`;
+  particle.style.setProperty("--drift-x", `${-54 + Math.random() * 108}px`);
   elements.receiveEffects.append(particle);
 
   window.setTimeout(() => {
     particle.remove();
   }, 1900);
+}
+
+function launchImmediateParticles() {
+  for (let index = 0; index < 6; index += 1) {
+    window.setTimeout(() => {
+      spawnParticle(index % 2 === 0 ? "heart" : "note");
+    }, index * 80);
+  }
 }
