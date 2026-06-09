@@ -3,7 +3,7 @@ const PEOPLE = ["号号", "秀琴"];
 const MAX_RECORDS = 30;
 const MAX_PER_DAY = 2;
 const MAX_IMAGE_BYTES = 450 * 1024;
-const CLOUD_REFRESH_MS = 15000;
+const CLOUD_REFRESH_MS = 8000;
 const DEFAULT_TABLE = config.momentPuzzleTableName || "couple_moment_puzzles";
 const LOCAL_KEYS = {
   records: "love-moment-puzzles-records",
@@ -78,8 +78,10 @@ renderAll();
 elements.identitySelect.addEventListener("change", () => {
   state.identity = normalizePerson(elements.identitySelect.value);
   localStorage.setItem(LOCAL_KEYS.identity, state.identity);
+  state.selectedId = null;
   refreshSelectedRecord();
   renderAll();
+  void syncMomentsFromCloud();
 });
 
 elements.photoInput.addEventListener("change", handlePreviewChange);
@@ -114,8 +116,10 @@ document.addEventListener("visibilitychange", () => {
 connectCloudIfPossible();
 
 function normalizePerson(value) {
-  if (value === "浩浩" || value === "号号" || value === "鍙峰彿") return "号号";
-  if (value === "秀琴" || value === "绉€鐞?" || value === "绉€鐞") return "秀琴";
+  const text = String(value || "").trim();
+  const lower = text.toLowerCase();
+  if (text === "浩浩" || text === "号号" || text === "鍙峰彿" || lower === "haohao") return "号号";
+  if (text === "秀琴" || text === "绉€鐞?" || text === "绉€鐞" || lower === "xiuqin") return "秀琴";
   return "号号";
 }
 
@@ -149,6 +153,14 @@ function formatDateTime(isoString) {
 
 function personKey(person) {
   return person === "秀琴" ? "xiuqin" : "haohao";
+}
+
+function isSamePerson(left, right) {
+  return personKey(normalizePerson(left)) === personKey(normalizePerson(right));
+}
+
+function isRecordOwnedByViewer(record) {
+  return isSamePerson(record.person, state.identity);
 }
 
 function setSyncMode(title, hint) {
@@ -241,18 +253,36 @@ function trimRecords(records) {
 }
 
 function mergeRecords(primary, secondary) {
-  const merged = [];
-  const seen = new Set();
+  const merged = new Map();
 
   [...primary, ...secondary].forEach((record) => {
     const normalized = normalizeRecord(record);
     const key = getSlotKey(normalized);
-    if (seen.has(key)) return;
-    seen.add(key);
-    merged.push(normalized);
+    const existing = merged.get(key);
+    merged.set(key, existing ? mergeDuplicateRecord(existing, normalized) : normalized);
   });
 
-  return trimRecords(merged);
+  return trimRecords(Array.from(merged.values()));
+}
+
+function mergeDuplicateRecord(left, right) {
+  const normalizedLeft = normalizeRecord(left);
+  const normalizedRight = normalizeRecord(right);
+  const newer = compareRecords(normalizedLeft, normalizedRight) <= 0 ? normalizedLeft : normalizedRight;
+  const older = newer === normalizedLeft ? normalizedRight : normalizedLeft;
+
+  return normalizeRecord({
+    ...older,
+    ...newer,
+    note: newer.note || older.note || "",
+    image_path: newer.image_path || older.image_path || "",
+    image_url: newer.image_url || older.image_url || "",
+    image_size: newer.image_size || older.image_size || 0,
+    width: newer.width || older.width || 0,
+    height: newer.height || older.height || 0,
+    solved_by_haohao_at: newer.solved_by_haohao_at || older.solved_by_haohao_at || "",
+    solved_by_xiuqin_at: newer.solved_by_xiuqin_at || older.solved_by_xiuqin_at || ""
+  });
 }
 
 function getTodayRecordsForPerson(person) {
@@ -378,7 +408,7 @@ function renderHistory() {
     button.append(thumb, title, meta, note);
     article.append(button);
 
-    if (record.person === state.identity) {
+    if (isRecordOwnedByViewer(record)) {
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.className = "history-delete-button";
@@ -413,7 +443,7 @@ function renderPuzzleArea() {
   elements.viewerMeta.textContent = `上传于 ${formatDateTime(record.created_at)}${record.image_size ? ` · ${formatBytes(record.image_size)}` : ""}`;
   elements.moveCount.textContent = `已交换 ${state.moves} 次`;
   elements.selectedTip.textContent = state.selectedTile === null ? "还没有选中图块" : `已选中第 ${state.selectedTile + 1} 块，再点另一块交换`;
-  elements.deleteSelectedButton.hidden = record.person !== state.identity;
+  elements.deleteSelectedButton.hidden = !isRecordOwnedByViewer(record);
   renderCompletionStatus(record);
   elements.viewerHint.textContent = state.solved
     ? "已经拼开了，想再玩一次的话可以重新打乱。"
@@ -464,7 +494,7 @@ function getSolvedCount(record) {
 }
 
 function isRecordUnlockedForViewer(record) {
-  if (record.person === state.identity) return true;
+  if (isRecordOwnedByViewer(record)) return true;
   return Boolean(record[getSolvedAtField(state.identity)]);
 }
 
