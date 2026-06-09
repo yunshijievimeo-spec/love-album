@@ -435,22 +435,23 @@ select:focus,
 .float-particle {
   position: absolute;
   z-index: 6;
-  bottom: 56px;
+  top: 112px;
   line-height: 1;
   opacity: 0;
-  animation: floatUp 1.9s ease-out forwards;
+  filter: drop-shadow(0 8px 16px rgba(255, 196, 214, 0.18));
+  animation: floatUp 2.1s ease-out forwards;
 }
 
 .float-particle.heart {
-  color: rgba(233, 108, 147, 0.8);
-  font-size: 1.36rem;
-  text-shadow: 0 6px 16px rgba(233, 108, 147, 0.24);
+  color: rgba(233, 94, 140, 0.96);
+  font-size: 1.58rem;
+  text-shadow: 0 6px 18px rgba(233, 108, 147, 0.28);
 }
 
 .float-particle.note {
-  color: rgba(244, 181, 83, 0.9);
-  font-size: 1.28rem;
-  text-shadow: 0 6px 16px rgba(244, 181, 83, 0.24);
+  color: rgba(244, 173, 61, 0.98);
+  font-size: 1.46rem;
+  text-shadow: 0 6px 18px rgba(244, 181, 83, 0.28);
 }
 
 @keyframes sunIdle {
@@ -513,16 +514,16 @@ select:focus,
 @keyframes floatUp {
   0% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) scale(0.82);
+    transform: translate3d(0, 14px, 0) scale(0.82);
   }
 
-  18% {
+  16% {
     opacity: 1;
   }
 
   100% {
     opacity: 0;
-    transform: translate3d(var(--drift-x), -116px, 0) scale(1.08);
+    transform: translate3d(var(--drift-x), -138px, 0) scale(1.16);
   }
 }
 

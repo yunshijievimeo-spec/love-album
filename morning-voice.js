@@ -784,19 +784,20 @@ function spawnParticle(type) {
   const particle = document.createElement("span");
   particle.className = `float-particle ${type}`;
   particle.textContent = type === "heart" ? "❤" : Math.random() > 0.5 ? "♪" : "♫";
-  particle.style.left = `${24 + Math.random() * 52}%`;
-  particle.style.setProperty("--drift-x", `${-54 + Math.random() * 108}px`);
+  particle.style.left = `${42 + Math.random() * 16}%`;
+  particle.style.top = `${98 + Math.random() * 22}px`;
+  particle.style.setProperty("--drift-x", `${-72 + Math.random() * 144}px`);
   elements.receiveEffects.append(particle);
 
   window.setTimeout(() => {
     particle.remove();
-  }, 1900);
+  }, 2200);
 }
 
 function launchImmediateParticles() {
-  for (let index = 0; index < 6; index += 1) {
+  for (let index = 0; index < 10; index += 1) {
     window.setTimeout(() => {
       spawnParticle(index % 2 === 0 ? "heart" : "note");
-    }, index * 80);
+    }, index * 65);
   }
 }
