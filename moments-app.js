@@ -7,7 +7,8 @@ const CLOUD_REFRESH_MS = 8000;
 const DEFAULT_TABLE = config.momentPuzzleTableName || "couple_moment_puzzles";
 const LOCAL_KEYS = {
   records: "love-moment-puzzles-records",
-  identity: "love-room-identity"
+  identity: "love-room-identity",
+  historyUnlocked: "love-moment-history-unlocked"
 };
 
 const elements = {
@@ -47,6 +48,12 @@ const elements = {
   revealImage: document.querySelector("#revealImage"),
   revealTitle: document.querySelector("#revealTitle"),
   revealNote: document.querySelector("#revealNote"),
+  historyGate: document.querySelector("#historyGate"),
+  historyUnlockForm: document.querySelector("#historyUnlockForm"),
+  historyPasswordInput: document.querySelector("#historyPasswordInput"),
+  historyUnlockButton: document.querySelector("#historyUnlockButton"),
+  historyLockButton: document.querySelector("#historyLockButton"),
+  historyUnlockStatus: document.querySelector("#historyUnlockStatus"),
   historyList: document.querySelector("#historyList"),
   heartBurst: document.querySelector("#heartBurst")
 };
@@ -65,7 +72,8 @@ const state = {
   syncTimer: 0,
   syncInFlight: false,
   previewUrl: "",
-  shouldAnimateReveal: false
+  shouldAnimateReveal: false,
+  historyUnlocked: readHistoryUnlockState()
 };
 
 elements.identitySelect.value = state.identity;
@@ -86,6 +94,8 @@ elements.identitySelect.addEventListener("change", () => {
 
 elements.photoInput.addEventListener("change", handlePreviewChange);
 elements.uploadForm.addEventListener("submit", handleSaveRecord);
+elements.historyUnlockForm?.addEventListener("submit", handleHistoryUnlock);
+elements.historyLockButton?.addEventListener("click", lockHistorySection);
 elements.slotOneButton?.addEventListener("click", () => switchComposerSlot(1));
 elements.slotTwoButton?.addEventListener("click", () => switchComposerSlot(2));
 elements.deleteTodayButton.addEventListener("click", async () => {
@@ -121,6 +131,29 @@ function normalizePerson(value) {
   if (text === "浩浩" || text === "号号" || text === "鍙峰彿" || lower === "haohao") return "号号";
   if (text === "秀琴" || text === "绉€鐞?" || text === "绉€鐞" || lower === "xiuqin") return "秀琴";
   return "号号";
+}
+
+function getHistoryPassword() {
+  return String(config.momentHistoryPassword || config.sitePassword || "").trim();
+}
+
+function readHistoryUnlockState() {
+  if (!getHistoryPassword()) return true;
+
+  try {
+    return sessionStorage.getItem(LOCAL_KEYS.historyUnlocked) === "1";
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+function writeHistoryUnlockState(value) {
+  try {
+    sessionStorage.setItem(LOCAL_KEYS.historyUnlocked, value ? "1" : "0");
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function getTodayString() {
@@ -320,8 +353,70 @@ function refreshSelectedRecord() {
 
 function renderAll() {
   renderComposer();
+  renderHistoryGate();
   renderHistory();
   renderPuzzleArea();
+}
+
+function renderHistoryGate() {
+  if (!elements.historyGate) return;
+
+  const password = getHistoryPassword();
+  const needsPassword = Boolean(password);
+
+  elements.historyGate.hidden = false;
+  elements.historyLockButton.hidden = !needsPassword || !state.historyUnlocked;
+  elements.historyUnlockButton.hidden = !needsPassword && state.historyUnlocked;
+  elements.historyPasswordInput.disabled = !needsPassword || state.historyUnlocked;
+  elements.historyUnlockButton.disabled = !needsPassword || state.historyUnlocked;
+
+  if (!needsPassword) {
+    elements.historyUnlockStatus.textContent = "没有单独配置密码，这里会直接显示最近 30 张。";
+    return;
+  }
+
+  if (state.historyUnlocked) {
+    elements.historyUnlockStatus.textContent = "密码正确，最近 30 张已经展开。";
+    elements.historyPasswordInput.value = "";
+    elements.historyPasswordInput.placeholder = "已经解锁，想重新隐藏可以点右边按钮";
+  } else {
+    elements.historyUnlockStatus.textContent = "输入密码后，下面才会显示最近 30 张已经拼开的图。";
+    elements.historyPasswordInput.placeholder = "输入密码后查看";
+  }
+}
+
+async function handleHistoryUnlock(event) {
+  event.preventDefault();
+
+  const password = getHistoryPassword();
+  if (!password) {
+    state.historyUnlocked = true;
+    renderAll();
+    return;
+  }
+
+  const input = elements.historyPasswordInput.value.trim();
+  if (!input) {
+    elements.historyUnlockStatus.textContent = "先输入密码，再看最近 30 张。";
+    return;
+  }
+
+  if (input !== password) {
+    elements.historyUnlockStatus.textContent = "密码不对，再试一次。";
+    elements.historyPasswordInput.select();
+    return;
+  }
+
+  state.historyUnlocked = true;
+  writeHistoryUnlockState(true);
+  renderAll();
+}
+
+function lockHistorySection() {
+  state.historyUnlocked = false;
+  writeHistoryUnlockState(false);
+  elements.historyPasswordInput.value = "";
+  renderAll();
 }
 
 function renderComposer() {
@@ -354,6 +449,14 @@ function renderComposer() {
 
 function renderHistory() {
   elements.historyList.innerHTML = "";
+
+  if (!state.historyUnlocked) {
+    const locked = document.createElement("div");
+    locked.className = "empty-state";
+    locked.innerHTML = "<strong>最近 30 张已上锁</strong><p>先在上面输入密码，再看已经拼开的那些小瞬间。</p>";
+    elements.historyList.append(locked);
+    return;
+  }
 
   if (!state.records.length) {
     const empty = document.createElement("div");
@@ -807,7 +910,9 @@ async function saveRecordToCloud(existing, compressed, note, slot) {
     image_url: publicData.publicUrl,
     image_size: compressed.imageSize,
     width: compressed.width,
-    height: compressed.height
+    height: compressed.height,
+    solved_by_haohao_at: null,
+    solved_by_xiuqin_at: null
   };
 
   let savedRecord = null;
@@ -826,8 +931,30 @@ async function saveRecordToCloud(existing, compressed, note, slot) {
     }
   } else {
     const { data, error } = await state.supabaseClient.from(DEFAULT_TABLE).insert(payload).select("*").single();
-    if (error) throw error;
-    savedRecord = data;
+    if (error) {
+      if (isMomentSlotConflict(error)) {
+        const cloudExisting = await fetchCloudRecordBySlot(today, slot, state.identity);
+        if (!cloudExisting) throw error;
+
+        const { data: fallbackData, error: fallbackError } = await state.supabaseClient
+          .from(DEFAULT_TABLE)
+          .update(payload)
+          .eq("id", cloudExisting.id)
+          .select("*")
+          .single();
+
+        if (fallbackError) throw fallbackError;
+        savedRecord = fallbackData;
+
+        if (cloudExisting.image_path && cloudExisting.image_path !== path) {
+          await state.supabaseClient.storage.from(config.bucketName).remove([cloudExisting.image_path]);
+        }
+      } else {
+        throw error;
+      }
+    } else {
+      savedRecord = data;
+    }
   }
 
   return savedRecord;
@@ -863,6 +990,24 @@ async function updateCloudNote(existing, note) {
     .single();
   if (error) throw error;
   return normalizeRecord(data);
+}
+
+function isMomentSlotConflict(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return error?.code === "23505" || message.includes("couple_moment_puzzles_person_date_slot_uidx");
+}
+
+async function fetchCloudRecordBySlot(date, slot, person) {
+  const { data, error } = await state.supabaseClient
+    .from(DEFAULT_TABLE)
+    .select("*")
+    .eq("person", person)
+    .eq("moment_date", date)
+    .eq("puzzle_slot", slot)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? normalizeRecord(data) : null;
 }
 
 function updateLocalNote(existing, note) {

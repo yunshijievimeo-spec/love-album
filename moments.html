@@ -180,6 +180,33 @@
         <p class="card-text">
           默认只保留最近的 30 张压缩图。想提前清掉哪张，可以直接删，不用等满一个月。
         </p>
+        <div id="historyGate" class="history-gate">
+          <div class="history-gate-copy">
+            <strong>输入密码后再看最近 30 张</strong>
+            <p>这里会收起已经拼过的小瞬间。每次重新打开页面，都要再输一次密码才会显示。</p>
+          </div>
+
+          <form id="historyUnlockForm" class="history-unlock-form">
+            <label class="history-password-field" for="historyPasswordInput">
+              <span>查看密码</span>
+              <input
+                id="historyPasswordInput"
+                type="password"
+                inputmode="numeric"
+                autocomplete="current-password"
+                placeholder="输入密码后查看"
+              />
+            </label>
+
+            <div class="history-gate-actions">
+              <button id="historyUnlockButton" class="soft-button primary" type="submit">查看最近 30 张</button>
+              <button id="historyLockButton" class="soft-button ghost" type="button" hidden>重新上锁</button>
+            </div>
+
+            <p id="historyUnlockStatus" class="form-status" role="status"></p>
+          </form>
+        </div>
+
         <div id="historyList" class="history-list"></div>
       </section>
     </main>
