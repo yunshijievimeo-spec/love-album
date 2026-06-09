@@ -395,9 +395,12 @@ h2 {
   inset: 0;
 }
 
-.hug-scene.is-off,
-.lamp-scene.is-off {
+.hug-scene.is-off {
   filter: grayscale(1) opacity(0.55);
+}
+
+.lamp-scene.is-off {
+  filter: none;
 }
 
 .person {
@@ -533,116 +536,164 @@ h2 {
   background: rgba(219, 201, 192, 0.4);
 }
 
-.lamp-line {
-  position: absolute;
-  left: 40px;
-  right: 40px;
-  top: 52px;
-  height: 4px;
-  border-radius: 999px;
-  background: #9e8e82;
+.lamp-scene {
+  overflow: hidden;
 }
 
-.lamp-pulse {
+.lamp-backdrop,
+.lamp-day-scene,
+.lamp-night-scene,
+.lamp-stars,
+.lamp-finish-message {
+  position: absolute;
+  inset: 0;
+}
+
+.lamp-backdrop {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 248, 223, 0.84), transparent 32%),
+    linear-gradient(180deg, #fff4cf 0%, #ffefdb 56%, #fff8f0 100%);
+  transition: background 0.5s ease, opacity 0.4s ease;
+}
+
+.lamp-sun,
+.lamp-moon {
   position: absolute;
   left: 50%;
-  top: 84px;
-  width: 84px;
-  height: 84px;
-  margin-left: -42px;
+  top: 30px;
+  width: 72px;
+  height: 72px;
+  margin-left: -36px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 225, 152, 0.4), rgba(255, 225, 152, 0));
+  transition: opacity 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.lamp-sun {
+  background: radial-gradient(circle at 35% 35%, #fff8cc, #f6c45e 72%, #ef9e44);
+  box-shadow: 0 0 0 20px rgba(255, 219, 119, 0.16);
+  animation: lampSunFloat 4.6s ease-in-out infinite;
+}
+
+.lamp-moon {
   opacity: 0;
-  transform: scale(0.35);
+  transform: translateY(12px) scale(0.92);
+  background: radial-gradient(circle at 35% 35%, #fffef6, #f1e6bd 78%, #dbc788);
+  box-shadow: 0 0 0 18px rgba(251, 245, 214, 0.12);
 }
 
-.lamp {
+.lamp-day-scene,
+.lamp-night-scene {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.lamp-day-floor {
   position: absolute;
-  top: 56px;
-  width: 86px;
-  height: 126px;
+  left: 20px;
+  right: 20px;
+  bottom: 18px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(220, 200, 178, 0.34);
 }
 
-.lamp::before {
+.lamp-desk {
+  position: absolute;
+  bottom: 48px;
+  width: 142px;
+  height: 118px;
+}
+
+.lamp-desk.left {
+  left: calc(50% - 162px);
+}
+
+.lamp-desk.right {
+  left: calc(50% + 20px);
+}
+
+.lamp-desk-top {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 38px;
+  height: 12px;
+  border-radius: 999px;
+  background: #b88762;
+  box-shadow: 0 10px 0 0 #9d7050;
+}
+
+.lamp-laptop {
+  position: absolute;
+  left: 50%;
+  bottom: 54px;
+  width: 40px;
+  height: 26px;
+  margin-left: -20px;
+  border-radius: 8px 8px 5px 5px;
+  background: linear-gradient(180deg, #768194, #5a6576);
+  box-shadow: 0 4px 0 rgba(255, 255, 255, 0.16) inset;
+}
+
+.lamp-laptop::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: -30px;
-  width: 4px;
-  height: 34px;
-  margin-left: -2px;
+  left: -6px;
+  right: -6px;
+  bottom: -7px;
+  height: 6px;
   border-radius: 999px;
-  background: #9e8e82;
+  background: #d9dde6;
 }
 
-.lamp-shell {
-  position: absolute;
-  inset: 24px 14px 0;
-  border-radius: 24px 24px 32px 32px;
-  background: linear-gradient(180deg, #fff2be, #f5bf50);
-  box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.35);
-}
-
-.lamp-scene.is-off .lamp-shell {
-  background: linear-gradient(180deg, #d9d4cf, #b9afa8);
-  box-shadow: none;
-}
-
-.lamp-glow {
+.lamp-worker {
   position: absolute;
   left: 50%;
-  top: 22px;
-  width: 120px;
-  height: 120px;
-  margin-left: -60px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 215, 112, 0.62), rgba(255, 215, 112, 0));
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  bottom: 48px;
+  width: 64px;
+  height: 82px;
+  margin-left: -32px;
 }
 
-.lamp-scene.is-left-on .lamp.left .lamp-shell,
-.lamp-scene.is-right-on .lamp.right .lamp-shell,
-.lamp-scene.is-on .lamp-shell {
-  background: linear-gradient(180deg, #fff2be, #f5bf50);
-  box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.35), 0 10px 22px rgba(245, 191, 80, 0.18);
-}
-
-.lamp-scene.is-left-on .lamp.left .lamp-glow,
-.lamp-scene.is-right-on .lamp.right .lamp-glow,
-.lamp-scene.is-on .lamp-glow {
-  opacity: 1;
-}
-
-.lamp-scene.is-on .lamp-glow {
-  animation: lampBreath 3.4s ease-in-out infinite;
-}
-
-.lamp-scene.is-on .lamp-shell {
-  animation: lampShellBreath 3.4s ease-in-out infinite;
-}
-
-.lamp.left {
-  left: calc(50% - 110px);
-}
-
-.lamp.right {
-  left: calc(50% + 24px);
-}
-
-.lamp-owner {
+.lamp-worker-head,
+.lamp-worker-body {
   position: absolute;
   left: 50%;
-  bottom: -34px;
   transform: translateX(-50%);
+}
+
+.lamp-worker-head {
+  top: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f2c7ac;
+}
+
+.lamp-worker-body {
+  top: 24px;
+  width: 42px;
+  height: 42px;
+  border-radius: 20px 20px 14px 14px;
+}
+
+.lamp-worker.left .lamp-worker-body {
+  background: #7da7e0;
+}
+
+.lamp-worker.right .lamp-worker-body {
+  background: #f29aac;
+}
+
+.lamp-owner-chip,
+.lamp-sleeper-name {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 54px;
+  min-width: 56px;
   height: 26px;
   padding: 0 0.8rem;
-  border: 1px solid rgba(153, 120, 90, 0.18);
   border-radius: 999px;
+  border: 1px solid rgba(156, 118, 89, 0.18);
   color: #7a5f53;
   font-size: 0.78rem;
   font-weight: 700;
@@ -652,34 +703,298 @@ h2 {
   white-space: nowrap;
 }
 
-.lamp-scene.is-left-on .lamp-owner.left,
-.lamp-scene.is-right-on .lamp-owner.right,
-.lamp-scene.is-on .lamp-owner {
+.lamp-owner-chip {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+
+.lamp-night-scene {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.lamp-bed-shadow {
+  position: absolute;
+  left: 56px;
+  right: 56px;
+  bottom: 26px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(102, 90, 99, 0.18);
+}
+
+.lamp-bed {
+  position: absolute;
+  left: 50%;
+  bottom: 42px;
+  width: 228px;
+  height: 112px;
+  margin-left: -114px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #f7ddc0, #ebc39b);
+  box-shadow: inset 0 -12px 0 rgba(177, 129, 90, 0.22);
+}
+
+.lamp-pillow {
+  position: absolute;
+  top: 14px;
+  width: 84px;
+  height: 30px;
+  border-radius: 18px;
+  background: rgba(255, 248, 242, 0.96);
+}
+
+.lamp-pillow.left {
+  left: 18px;
+}
+
+.lamp-pillow.right {
+  right: 18px;
+}
+
+.lamp-blanket {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  height: 58px;
+  border-radius: 22px 22px 26px 26px;
+  background: linear-gradient(180deg, #f1b7bf, #da8d9f);
+  box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.14);
+}
+
+.lamp-sleeper {
+  position: absolute;
+  top: 28px;
+  width: 84px;
+  height: 72px;
+}
+
+.lamp-sleeper.left {
+  left: 18px;
+}
+
+.lamp-sleeper.right {
+  right: 18px;
+}
+
+.lamp-sleeper-head,
+.lamp-sleeper-body {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.lamp-sleeper-head {
+  top: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f2c7ac;
+  z-index: 2;
+}
+
+.lamp-sleeper-body {
+  top: 14px;
+  width: 52px;
+  height: 34px;
+  border-radius: 20px;
+  opacity: 0.86;
+}
+
+.lamp-sleeper.left .lamp-sleeper-body {
+  background: #7da7e0;
+}
+
+.lamp-sleeper.right .lamp-sleeper-body {
+  background: #f29aac;
+}
+
+.lamp-sleeper-name {
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  transform: translateX(-50%);
+  height: 24px;
+  min-width: 54px;
+  font-size: 0.74rem;
+}
+
+.lamp-bedside {
+  position: absolute;
+  right: 54px;
+  bottom: 46px;
+  width: 70px;
+  height: 118px;
+}
+
+.lamp-bedside-pole {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  width: 5px;
+  height: 54px;
+  margin-left: -2.5px;
+  border-radius: 999px;
+  background: #8e7f75;
+}
+
+.lamp-bedside-shade {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 44px;
+  height: 34px;
+  margin-left: -22px;
+  border-radius: 14px 14px 20px 20px;
+  background: linear-gradient(180deg, #fff0bb, #f1bd5b);
+  box-shadow: inset 0 6px 0 rgba(255, 255, 255, 0.2);
+}
+
+.lamp-bedside-base {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 30px;
+  height: 8px;
+  margin-left: -15px;
+  border-radius: 999px;
+  background: #8e7f75;
+}
+
+.lamp-bedside-glow {
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  width: 112px;
+  height: 112px;
+  margin-left: -56px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 220, 127, 0.52), rgba(255, 220, 127, 0));
+  animation: lampBreath 3.2s ease-in-out infinite;
+}
+
+.lamp-stars {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.lamp-stars span {
+  position: absolute;
+  color: rgba(255, 250, 219, 0.92);
+  font-size: 16px;
+  text-shadow: 0 0 10px rgba(255, 249, 215, 0.24);
+}
+
+.lamp-finish-message {
+  inset: auto 0 22px;
+  opacity: 0;
+  text-align: center;
+  transform: translateY(10px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.lamp-finish-message strong,
+.lamp-finish-message small {
+  display: block;
+}
+
+.lamp-finish-message strong {
+  margin-bottom: 0.3rem;
+  color: #fff7df;
+  font-size: 1.02rem;
+}
+
+.lamp-finish-message small {
+  color: rgba(255, 247, 222, 0.82);
+  font-size: 0.84rem;
+}
+
+.lamp-scene.is-day .lamp-day-scene {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lamp-scene.is-night .lamp-day-scene {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.lamp-scene.is-night .lamp-night-scene {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lamp-scene.is-night .lamp-sun {
+  opacity: 0;
+  transform: translateY(-18px) scale(0.9);
+}
+
+.lamp-scene.is-night .lamp-moon {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.lamp-scene.is-left-on .lamp-sleeper.left .lamp-sleeper-name,
+.lamp-scene.is-right-on .lamp-sleeper.right .lamp-sleeper-name {
   color: #7a5318;
   background: linear-gradient(180deg, rgba(255, 244, 196, 0.98), rgba(255, 231, 158, 0.94));
   border-color: rgba(226, 177, 84, 0.34);
   box-shadow: 0 10px 22px rgba(245, 191, 80, 0.18);
 }
 
-.lamp-stars {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.lamp-scene.is-left-on .lamp-sleeper.left .lamp-sleeper-body,
+.lamp-scene.is-right-on .lamp-sleeper.right .lamp-sleeper-body {
+  transform: translateX(-50%) translateY(3px);
 }
 
-.lamp-scene.is-on .lamp-stars {
+.lamp-scene.is-on .lamp-backdrop {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(200, 210, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, #13203d 0%, #1a1b37 52%, #171425 100%);
+}
+
+.lamp-scene.is-on .lamp-bedside-glow,
+.lamp-scene.is-on .lamp-bedside-shade,
+.lamp-scene.is-on .lamp-bedside-pole,
+.lamp-scene.is-on .lamp-bedside-base {
+  opacity: 0.16;
+}
+
+.lamp-scene.is-on .lamp-bed,
+.lamp-scene.is-on .lamp-blanket,
+.lamp-scene.is-on .lamp-pillow,
+.lamp-scene.is-on .lamp-bed-shadow {
+  filter: brightness(0.5) saturate(0.8);
+}
+
+.lamp-scene.is-on .lamp-stars,
+.lamp-scene.is-on .lamp-finish-message {
   opacity: 1;
+  transform: translateY(0);
 }
 
-.lamp-stars span {
+.lamp-scene.is-flashing .lamp-backdrop::after {
+  content: "";
   position: absolute;
-  color: rgba(255, 197, 80, 0.9);
-  font-size: 18px;
+  left: 50%;
+  top: 74px;
+  width: 110px;
+  height: 110px;
+  margin-left: -55px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 236, 166, 0.5), rgba(255, 236, 166, 0));
+  animation: lampPulseSpread 0.72s ease-out;
 }
 
-.lamp-scene.is-flashing .lamp-pulse {
-  animation: lampPulseSpread 0.72s ease-out;
+.lamp-status-text {
+  margin: 0.85rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+  text-align: center;
 }
 
 .garden-card {
@@ -1624,6 +1939,19 @@ h2 {
   100% {
     opacity: 0;
     transform: scale(3.3);
+  }
+}
+
+@keyframes lampSunFloat {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 20px rgba(255, 219, 119, 0.16);
+  }
+
+  50% {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 0 0 24px rgba(255, 219, 119, 0.24);
   }
 }
 

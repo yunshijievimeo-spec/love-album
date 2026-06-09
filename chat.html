@@ -282,29 +282,76 @@
             </div>
           </div>
           <div class="ritual-box lamp-box">
-            <div id="lampScene" class="lamp-scene is-off">
-              <div class="lamp-line"></div>
-              <div class="lamp-pulse"></div>
-              <div class="lamp left">
-                <div class="lamp-glow"></div>
-                <div class="lamp-shell"></div>
-                <div class="lamp-owner left">号号</div>
+            <div id="lampScene" class="lamp-scene is-day">
+              <div class="lamp-backdrop">
+                <div class="lamp-sun"></div>
+                <div class="lamp-moon"></div>
+                <div class="lamp-stars">
+                  <span style="left: 18%; top: 18%;">✦</span>
+                  <span style="left: 34%; top: 26%;">✦</span>
+                  <span style="left: 52%; top: 16%;">✦</span>
+                  <span style="left: 68%; top: 22%;">✦</span>
+                  <span style="left: 80%; top: 14%;">✦</span>
+                </div>
               </div>
-              <div class="lamp right">
-                <div class="lamp-glow"></div>
-                <div class="lamp-shell"></div>
-                <div class="lamp-owner right">秀琴</div>
+
+              <div class="lamp-day-scene">
+                <div class="lamp-day-floor"></div>
+                <div class="lamp-desk left">
+                  <div class="lamp-desk-top"></div>
+                  <div class="lamp-laptop"></div>
+                  <div class="lamp-worker left">
+                    <span class="lamp-worker-head"></span>
+                    <span class="lamp-worker-body"></span>
+                  </div>
+                  <div class="lamp-owner-chip left">号号</div>
+                </div>
+                <div class="lamp-desk right">
+                  <div class="lamp-desk-top"></div>
+                  <div class="lamp-laptop"></div>
+                  <div class="lamp-worker right">
+                    <span class="lamp-worker-head"></span>
+                    <span class="lamp-worker-body"></span>
+                  </div>
+                  <div class="lamp-owner-chip right">秀琴</div>
+                </div>
               </div>
-              <div class="lamp-stars">
-                <span style="left: 26%; top: 24%;">✦</span>
-                <span style="left: 48%; top: 18%;">✦</span>
-                <span style="left: 68%; top: 28%;">✦</span>
+
+              <div class="lamp-night-scene">
+                <div class="lamp-bed-shadow"></div>
+                <div class="lamp-bed">
+                  <div class="lamp-pillow left"></div>
+                  <div class="lamp-pillow right"></div>
+                  <div class="lamp-blanket"></div>
+                  <div class="lamp-sleeper left">
+                    <span class="lamp-sleeper-head"></span>
+                    <span class="lamp-sleeper-body"></span>
+                    <span class="lamp-sleeper-name">号号</span>
+                  </div>
+                  <div class="lamp-sleeper right">
+                    <span class="lamp-sleeper-head"></span>
+                    <span class="lamp-sleeper-body"></span>
+                    <span class="lamp-sleeper-name">秀琴</span>
+                  </div>
+                </div>
+
+                <div class="lamp-bedside">
+                  <div class="lamp-bedside-glow"></div>
+                  <div class="lamp-bedside-pole"></div>
+                  <div class="lamp-bedside-shade"></div>
+                  <div class="lamp-bedside-base"></div>
+                </div>
               </div>
-              <div class="ritual-ground"></div>
+
+              <div class="lamp-finish-message">
+                <strong>今晚一起早睡成功</strong>
+                <small>灯关掉后，就让月亮和星星来守夜。</small>
+              </div>
             </div>
           </div>
+          <p id="lampStatusText" class="lamp-status-text">白天先一起努力，今晚 20:00 后再来一起关灯睡觉。</p>
 
-          <button id="lampButton" class="soft-button" type="button">点亮晚安灯</button>
+          <button id="lampButton" class="soft-button" type="button">今晚 20:00 后开启</button>
         </article>
 
         <article class="feature-card score-card">
