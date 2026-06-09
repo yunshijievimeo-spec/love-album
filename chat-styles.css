@@ -608,8 +608,13 @@ h2 {
   box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.35), 0 10px 22px rgba(245, 191, 80, 0.18);
 }
 
+.lamp-scene.is-left-on .lamp.left .lamp-glow,
+.lamp-scene.is-right-on .lamp.right .lamp-glow,
 .lamp-scene.is-on .lamp-glow {
   opacity: 1;
+}
+
+.lamp-scene.is-on .lamp-glow {
   animation: lampBreath 3.4s ease-in-out infinite;
 }
 
@@ -623,6 +628,37 @@ h2 {
 
 .lamp.right {
   left: calc(50% + 24px);
+}
+
+.lamp-owner {
+  position: absolute;
+  left: 50%;
+  bottom: -34px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  height: 26px;
+  padding: 0 0.8rem;
+  border: 1px solid rgba(153, 120, 90, 0.18);
+  border-radius: 999px;
+  color: #7a5f53;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(255, 250, 245, 0.92);
+  box-shadow: 0 8px 18px rgba(126, 92, 74, 0.1);
+  white-space: nowrap;
+}
+
+.lamp-scene.is-left-on .lamp-owner.left,
+.lamp-scene.is-right-on .lamp-owner.right,
+.lamp-scene.is-on .lamp-owner {
+  color: #7a5318;
+  background: linear-gradient(180deg, rgba(255, 244, 196, 0.98), rgba(255, 231, 158, 0.94));
+  border-color: rgba(226, 177, 84, 0.34);
+  box-shadow: 0 10px 22px rgba(245, 191, 80, 0.18);
 }
 
 .lamp-stars {
