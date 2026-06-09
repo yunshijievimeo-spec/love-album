@@ -711,6 +711,14 @@ function replaceRecordInState(record) {
   localStorage.setItem(LOCAL_KEYS.records, JSON.stringify(state.records));
 }
 
+function upsertRecordInState(record) {
+  const normalized = normalizeRecord(record);
+  const slotKey = getSlotKey(normalized);
+  const others = state.records.filter((item) => getSlotKey(item) !== slotKey && item.id !== normalized.id);
+  state.records = trimRecords([normalized, ...others]);
+  localStorage.setItem(LOCAL_KEYS.records, JSON.stringify(state.records));
+}
+
 function showRevealState() {
   elements.puzzleStage.classList.remove("is-revealed");
   elements.revealPanel.classList.remove("is-active");
@@ -800,10 +808,22 @@ async function handleSaveRecord(event) {
       ? "今天的小瞬间已经同步到云端。"
       : "今天的小瞬间已经保存在本地预览里。";
 
-    await refreshRecords();
+    upsertRecordInState(nextRecord);
+    refreshSelectedRecord();
     state.selectedId = nextRecord.id;
     setupPuzzle(nextRecord);
     renderAll();
+
+    if (state.hasCloud) {
+      try {
+        await refreshRecords();
+        refreshSelectedRecord();
+        state.selectedId = nextRecord.id;
+        renderAll();
+      } catch (refreshError) {
+        console.error(refreshError);
+      }
+    }
   } catch (error) {
     console.error(error);
     elements.saveStatus.textContent = state.hasCloud
@@ -892,6 +912,7 @@ function renderWebp(image, width, height, quality) {
 
 async function saveRecordToCloud(existing, compressed, note, slot) {
   const today = getTodayString();
+  const serverExisting = existing || (await fetchCloudRecordBySlot(today, slot, state.identity));
   const path = `tiny-moments/${today}/${personKey(state.identity)}-slot-${slot}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
 
   const { error: uploadError } = await state.supabaseClient.storage
@@ -916,18 +937,18 @@ async function saveRecordToCloud(existing, compressed, note, slot) {
   };
 
   let savedRecord = null;
-  if (existing) {
+  if (serverExisting) {
     const { data, error } = await state.supabaseClient
       .from(DEFAULT_TABLE)
       .update(payload)
-      .eq("id", existing.id)
+      .eq("id", serverExisting.id)
       .select("*")
       .single();
     if (error) throw error;
     savedRecord = data;
 
-    if (existing.image_path && existing.image_path !== path) {
-      await state.supabaseClient.storage.from(config.bucketName).remove([existing.image_path]);
+    if (serverExisting.image_path && serverExisting.image_path !== path) {
+      await state.supabaseClient.storage.from(config.bucketName).remove([serverExisting.image_path]);
     }
   } else {
     const { data, error } = await state.supabaseClient.from(DEFAULT_TABLE).insert(payload).select("*").single();
