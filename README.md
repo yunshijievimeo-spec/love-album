@@ -9,7 +9,7 @@
 默认共同密码在 `config.example.js` 里：
 
 ```js
-sitePassword: "1314"
+sitePassword: "1111"
 ```
 
 ## 免费上线方案

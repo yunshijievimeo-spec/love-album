@@ -1,6 +1,6 @@
 window.LOVE_ALBUM_CONFIG = {
-  sitePassword: "1314",
-  momentHistoryPassword: "1314",
+  sitePassword: "1111",
+  momentHistoryPassword: "1111",
   supabaseUrl: "https://xdlrxqelqszqldblygma.supabase.co",
   supabaseAnonKey: "sb_publishable_8DTggSrA_sH4bXzBNbFl2A_QcJKHOG-",
   bucketName: "love-photos",
