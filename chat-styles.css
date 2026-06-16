@@ -1127,6 +1127,10 @@ h2 {
   align-items: start;
 }
 
+.baby-panel .garden-stats .garden-stat:last-child {
+  grid-column: 1 / -1;
+}
+
 .baby-visual {
   border-radius: 28px;
   overflow: hidden;
@@ -1409,6 +1413,18 @@ h2 {
     radial-gradient(circle at 20% 24%, rgba(255, 255, 255, 0.8), transparent 4rem),
     radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.72), transparent 4.5rem),
     radial-gradient(circle at 50% 18%, rgba(255, 205, 114, 0.4), transparent 8rem);
+}
+
+.baby-room.is-celebrating .baby-room-glow {
+  background:
+    radial-gradient(circle at 20% 24%, rgba(255, 255, 255, 0.82), transparent 4rem),
+    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.78), transparent 4.5rem),
+    radial-gradient(circle at 50% 18%, rgba(255, 191, 112, 0.48), transparent 9rem);
+  animation: babyCelebrateGlow 1.8s ease-in-out infinite;
+}
+
+.baby-room.is-celebrating .baby-swaddle {
+  animation: babyCelebrateBob 1.6s ease-in-out infinite;
 }
 
 .garden-layout {
@@ -2034,6 +2050,30 @@ h2 {
   100% {
     opacity: 0;
     transform: translateY(-40px) scale(1.04);
+  }
+}
+
+@keyframes babyCelebrateGlow {
+  0%,
+  100% {
+    opacity: 1;
+    filter: saturate(1);
+  }
+
+  50% {
+    opacity: 0.92;
+    filter: saturate(1.1);
+  }
+}
+
+@keyframes babyCelebrateBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
   }
 }
 
