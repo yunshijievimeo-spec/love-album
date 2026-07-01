@@ -1387,9 +1387,28 @@ function getGardenStats() {
   const initialCreditWater = initialCreditDays * GARDEN_DAILY_LIMIT_TOTAL;
   const totalWater = state.gardenRows.reduce((sum, item) => sum + Number(item.count || 0), 0) + initialCreditWater;
   const cappedTotalWater = Math.min(totalWater, GARDEN_WATER_PER_BLOOM * GARDEN_MAX_BLOOMS);
-  const completedMonths = Math.min(GARDEN_MAX_BLOOMS, Math.floor(cappedTotalWater / GARDEN_WATER_PER_BLOOM));
+  const completedMonths = getGardenCompletedMonthsByCalendar();
+  const activeMonthIndex = Math.min(completedMonths, GARDEN_MAX_BLOOMS - 1);
+  const activeMonthMeta = GARDEN_TIMELINE_MONTHS[activeMonthIndex];
+  const currentMonthRows =
+    completedMonths >= GARDEN_MAX_BLOOMS
+      ? []
+      : state.gardenRows.filter((item) => {
+          const dateSource = item.water_date || item.created_at || "";
+          const waterDate = new Date(dateSource);
+
+          if (Number.isNaN(waterDate.getTime())) {
+            return false;
+          }
+
+          return (
+            waterDate.getFullYear() === activeMonthMeta.year &&
+            waterDate.getMonth() + 1 === activeMonthMeta.month
+          );
+        });
+  const currentMonthWater = currentMonthRows.reduce((sum, item) => sum + Number(item.count || 0), 0);
   const currentProgress =
-    completedMonths >= GARDEN_MAX_BLOOMS ? GARDEN_WATER_PER_BLOOM : cappedTotalWater % GARDEN_WATER_PER_BLOOM;
+    completedMonths >= GARDEN_MAX_BLOOMS ? GARDEN_WATER_PER_BLOOM : Math.min(GARDEN_WATER_PER_BLOOM, currentMonthWater);
   const todayRows = state.gardenRows.filter((item) => item.water_date === today);
   const todayTotal = todayRows.reduce((sum, item) => sum + Number(item.count || 0), 0);
   const haohaoRow = todayRows.find((item) => normalizeIdentity(item.person) === GARDEN_PEOPLE[0]);
@@ -1398,7 +1417,6 @@ function getGardenStats() {
   const xiuqinToday = Number(xiuqinRow?.count || 0);
   const remainingForNextBloom =
     completedMonths >= GARDEN_MAX_BLOOMS ? 0 : Math.max(0, GARDEN_WATER_PER_BLOOM - currentProgress);
-  const activeMonthIndex = Math.min(completedMonths, GARDEN_MAX_BLOOMS - 1);
   const dayEquivalent = currentProgress / GARDEN_DAILY_LIMIT_TOTAL;
   const visibleDayCount = Math.floor(currentProgress / GARDEN_DAILY_LIMIT_TOTAL);
 
@@ -1726,6 +1744,12 @@ function getGardenCalendarDaysLeft(monthMeta, now = new Date()) {
   return Math.max(0, lastDayOfMonth - now.getDate());
 }
 
+function getGardenCompletedMonthsByCalendar(now = new Date()) {
+  const currentMonthIndex = now.getFullYear() * 12 + now.getMonth();
+  const startMonthIndex = GARDEN_TIMELINE_START.year * 12 + (GARDEN_TIMELINE_START.month - 1);
+  return Math.max(0, Math.min(GARDEN_MAX_BLOOMS, currentMonthIndex - startMonthIndex));
+}
+
 function renderGarden() {
   const stats = getGardenStats();
   const activeMonth = GARDEN_TIMELINE_MONTHS[stats.activeMonthIndex];
@@ -1747,7 +1771,7 @@ function renderGarden() {
   elements.gardenProgressFill.style.width = `${stats.progressPercent}%`;
 
   if (elements.gardenIntroText) {
-    elements.gardenIntroText.textContent = `这一轮从 ${GARDEN_TIMELINE_START_LABEL} 开始，一直排到 ${GARDEN_TIMELINE_END_LABEL}。每天每人最多浇 12 点，两个人一天最多 24 点；把这 24 点慢慢浇满，累计养够 30 天，这个月的瓶口就会结出一对小果子。`;
+    elements.gardenIntroText.textContent = `这一轮从 ${GARDEN_TIMELINE_START_LABEL} 开始，一直排到 ${GARDEN_TIMELINE_END_LABEL}。每天每人最多浇 12 点，两个人一天最多 24 点；这个月里慢慢把它养甜就好，只要过完整个月，这瓶就会按时结出一对小果子。`;
   }
 
   if (elements.gardenBottleWater) {
@@ -1781,9 +1805,7 @@ function renderGarden() {
   } else if (calendarDaysLeft !== null) {
     elements.gardenProgressHint.textContent = `离 ${formatGardenTimelineLabel(activeMonth)} 这瓶结出小果子，还剩 ${calendarDaysLeft} 天。`;
   } else {
-    elements.gardenProgressHint.textContent = `离 ${formatGardenTimelineLabel(activeMonth)} 这瓶结出小果子，还差 ${formatGardenDays(
-      stats.remainingForNextBloom / GARDEN_DAILY_LIMIT_TOTAL
-    )} 天的水量。`;
+    elements.gardenProgressHint.textContent = `等到了 ${formatGardenTimelineLabel(activeMonth)} 这个月结束，这瓶就会自然结出小果子。`;
   }
 
   renderInfoPanel(
