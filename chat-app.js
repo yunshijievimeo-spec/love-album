@@ -7,7 +7,7 @@ const localKeys = {
   syncRounds: "love-room-sync-rounds",
   capsules: "love-room-capsules",
   gardenWatering: "love-room-garden-watering",
-  babyFeeds: "love-room-baby-feeds",
+  babyFeeds: "love-room-baby-feeds-v2",
   identity: "love-room-identity"
 };
 
