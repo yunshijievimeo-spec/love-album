@@ -13,73 +13,17 @@
   const BABY_VERY_HUNGRY_DELAY_RANGE = [4000, 7000];
   const BABY_AGE_CELEBRATION_KEY = "love-room-baby-age-celebration";
   const BABY_VIEWER_FEED_MESSAGES = {
-    "\u53f7\u53f7": ["\u8c22\u8c22\u7238\u7238", "\u9971\u9971\u5566"],
-    "\u79c0\u7434": ["\u8c22\u8c22\u5988\u5988", "\u5976\u9999\u9999"]
+    "号号": ["谢谢爸爸", "饱饱啦"],
+    "秀琴": ["谢谢妈妈", "奶香香"]
   };
-  const BABY_HUNGRY_MESSAGES = [
-    "\u7238\u5988\u6211\u997f\u4e86",
-    "\u54c7\u545c",
-    "\u5976\u5976\u5462",
-    "\u5feb\u6765\u62b1\u62b1\u6211"
-  ];
-  const BABY_VERY_HUNGRY_MESSAGES = [
-    "\u7238\u5988\u600e\u4e48\u8fd8\u6ca1\u6765",
-    "\u6211\u8981\u54ed\u54ed\u4e86",
-    "\u545c\u545c\u997f\u997f",
-    "\u5b9d\u5b9d\u59d4\u5c48"
-  ];
+  const BABY_HUNGRY_MESSAGES = ["爸妈我饿了", "哇呜", "奶奶呢", "快来抱抱我"];
+  const BABY_VERY_HUNGRY_MESSAGES = ["爸妈怎么还没来", "我要哭哭了", "呜呜饿饿", "宝宝委屈"];
 
   let babyAmbientTimer = 0;
   let babyJustFedShownKey = "";
 
-  if (!Array.isArray(state.pendingBabyFeeds)) {
-    state.pendingBabyFeeds = [];
-  }
-  if (typeof state.babyFeedHydrateSeq !== "number") {
-    state.babyFeedHydrateSeq = 0;
-  }
-  if (typeof state.babyFeedMutationSeq !== "number") {
-    state.babyFeedMutationSeq = 0;
-  }
-
   function normalizePersonRows(rows, person) {
     return rows.filter((item) => normalizeIdentity(item.person) === person);
-  }
-
-  function getBabyRowKey(row) {
-    if (!row) {
-      return "";
-    }
-
-    return row.id || [row.person, row.feed_date, row.amount, row.created_at].join("|");
-  }
-
-  function queuePendingBabyRow(row) {
-    const rowKey = getBabyRowKey(row);
-    if (!rowKey) {
-      return;
-    }
-
-    const pendingKeys = new Set(state.pendingBabyFeeds.map(getBabyRowKey));
-    if (!pendingKeys.has(rowKey)) {
-      state.pendingBabyFeeds = [...state.pendingBabyFeeds, row];
-    }
-  }
-
-  function mergePendingBabyRows(rows = []) {
-    const serverRows = Array.isArray(rows) ? rows : [];
-    const serverKeys = new Set(serverRows.map(getBabyRowKey));
-
-    state.pendingBabyFeeds = state.pendingBabyFeeds.filter((row) => {
-      const rowKey = getBabyRowKey(row);
-      return rowKey && !serverKeys.has(rowKey);
-    });
-
-    return [...serverRows, ...state.pendingBabyFeeds].sort((left, right) => {
-      const leftTime = new Date(left.created_at || 0).getTime();
-      const rightTime = new Date(right.created_at || 0).getTime();
-      return leftTime - rightTime;
-    });
   }
 
   function randomBetween(min, max) {
@@ -101,7 +45,7 @@
   }
 
   function getViewerFeedMessages(person = state.identity) {
-    return BABY_VIEWER_FEED_MESSAGES[normalizeIdentity(person)] || ["\u8c22\u8c22\u4f60\u4eec", "\u9971\u9971\u5566"];
+    return BABY_VIEWER_FEED_MESSAGES[normalizeIdentity(person)] || ["谢谢你们", "饱饱啦"];
   }
 
   function getBabyGrowthStartTime(rows) {
@@ -111,46 +55,44 @@
 
   function getBabyReachedAge(ageValue) {
     let reachedAge = 0;
-
     BABY_GROWTH_MILESTONES.forEach((milestone) => {
       if (ageValue >= milestone) {
         reachedAge = milestone;
       }
     });
-
     return reachedAge;
   }
 
   function formatBabyAge(ageValue) {
     if (ageValue >= BABY_GROWTH_FINAL_AGE) {
-      return `\u5df2\u7ecf ${BABY_GROWTH_FINAL_AGE} \u5c81\u5566`;
+      return `已经 ${BABY_GROWTH_FINAL_AGE} 岁啦`;
     }
 
     if (ageValue === 0.5) {
-      return "\u534a\u5c81\u5566";
+      return "半岁啦";
     }
 
     if (ageValue <= 0) {
-      return "\u521a\u6765\u5230\u4f60\u4eec\u8eab\u8fb9";
+      return "刚来到你们身边";
     }
 
-    return `${ageValue}\u5c81\u5566`;
+    return `${ageValue}岁啦`;
   }
 
   function formatBabyAgeShort(ageValue) {
     if (ageValue >= BABY_GROWTH_FINAL_AGE) {
-      return `${BABY_GROWTH_FINAL_AGE}\u5c81`;
+      return `${BABY_GROWTH_FINAL_AGE}岁`;
     }
 
     if (ageValue === 0.5) {
-      return "\u534a\u5c81";
+      return "半岁";
     }
 
     if (ageValue <= 0) {
-      return "\u65b0\u751f";
+      return "新生";
     }
 
-    return `${ageValue}\u5c81`;
+    return `${ageValue}岁`;
   }
 
   function getBabyNextMilestone(ageValue) {
@@ -159,18 +101,18 @@
 
   function getBabyInteractionLabel(ageValue) {
     if (ageValue >= 13) {
-      return "\u770b\u770b\u4eca\u5929\u600e\u4e48\u6837";
+      return "看看今天怎么样";
     }
 
     if (ageValue >= 6) {
-      return "\u966a\u4eca\u5929\u957f\u5927\u4e00\u70b9";
+      return "陪今天长大一点";
     }
 
     if (ageValue >= 2) {
-      return "\u55b7\u996d\u996d";
+      return "喂饭饭";
     }
 
-    return `\u5582 ${BABY_FEED_AMOUNT}ml \u5976`;
+    return `喂 ${BABY_FEED_AMOUNT}ml 奶`;
   }
 
   function removeBabyEffectLater(node, delay = 2200) {
@@ -211,7 +153,7 @@
       for (let index = 0; index < 2; index += 1) {
         const heart = document.createElement("span");
         heart.className = "baby-heart-float";
-        heart.textContent = "\u2764";
+        heart.textContent = "❤";
         heart.style.left = `${anchor.heartLeft + index * 18}px`;
         heart.style.top = `${anchor.heartTop + ((index + anchorIndex) % 2) * 10}px`;
         heart.style.animationDelay = `${anchorIndex * 0.05 + index * 0.08}s`;
@@ -232,19 +174,6 @@
     const anchors = getBabyAnchors();
     spawnBabyPhrase(ageText, anchors[0], "baby-thanks");
     spawnBabyPhrase(ageText, anchors[1], "baby-thanks", "0.08s");
-
-    anchors.forEach((anchor, anchorIndex) => {
-      for (let index = 0; index < 3; index += 1) {
-        const heart = document.createElement("span");
-        heart.className = "baby-heart-float";
-        heart.textContent = "\u2764";
-        heart.style.left = `${anchor.heartLeft - 8 + index * 16}px`;
-        heart.style.top = `${anchor.heartTop - 10 + ((index + anchorIndex) % 2) * 8}px`;
-        heart.style.animationDelay = `${anchorIndex * 0.04 + index * 0.06}s`;
-        elements.babyEffects?.append(heart);
-        removeBabyEffectLater(heart, 2200);
-      }
-    });
   }
 
   function maybeCelebrateBabyAge(stats) {
@@ -357,40 +286,39 @@
     const currentAgeLabel = formatBabyAgeShort(reachedAge);
     const ageBadgeText = formatBabyAge(reachedAge);
 
-    const canFeed =
-      myTodayCount < BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON && (!myLastFeedAt || myCooldownRemaining <= 0);
+    const canFeed = myTodayCount < BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON && (!myLastFeedAt || myCooldownRemaining <= 0);
 
     let scene = "is-waiting";
-    let statusText = "\u7b49\u7b2c\u4e00\u987f\u5976";
-    let careStatusText = "\u7b49\u7b2c\u4e00\u987f\u5976";
+    let statusText = "等第一顿奶";
+    let careStatusText = "等第一顿奶";
 
     if (!lastFeedAt) {
       scene = "is-waiting";
-      statusText = "\u7b49\u7b2c\u4e00\u987f\u5976";
-      careStatusText = "\u4eca\u5929\u8fd8\u6ca1\u5f00\u59cb\u7167\u987e";
+      statusText = "等第一顿奶";
+      careStatusText = "今天还没开始照顾";
     } else if (hungerStage === "very-hungry") {
       scene = "is-crying";
-      statusText = "\u997f\u574f\u5566";
-      careStatusText = "\u5b9d\u5b9d\u997f\u5f97\u54c7\u54c7\u54ed";
+      statusText = "饿坏啦";
+      careStatusText = "宝宝饿得哇哇哭";
     } else if (hungerStage === "hungry") {
       scene = "is-crying";
-      statusText = "\u809a\u809a\u997f\u4e86";
-      careStatusText = "\u5b9d\u5b9d\u5728\u7b49\u4f60\u4eec\u6765\u7167\u987e";
+      statusText = "肚肚饿了";
+      careStatusText = "宝宝在等你们来照顾";
     } else {
       scene = "is-sleeping";
-      statusText = justFed ? "\u521a\u5582\u5b8c" : "\u7761\u89c9\u4e2d";
-      careStatusText = justFed ? "\u521a\u559d\u9971\u6b63\u5728\u7761\u89c9" : "\u7761\u5f97\u9999\u9999\u7684";
+      statusText = justFed ? "刚喂完" : "睡觉中";
+      careStatusText = justFed ? "刚喝饱正在睡觉" : "睡得香香的";
     }
 
     if (bothDailyFull && cooldownRemaining > 0 && !hungerStage) {
-      statusText = "\u7761\u89c9\u4e2d";
-      careStatusText = "\u4eca\u5929\u4f60\u4eec\u90fd\u7167\u987e\u6ee1\u4e86";
+      statusText = "睡觉中";
+      careStatusText = "今天你们都照顾满了";
     } else if (myTodayCount >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON) {
-      careStatusText = `\u4eca\u5929 ${state.identity} \u5df2\u7ecf\u7167\u987e\u6ee1 ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} \u6b21`;
+      careStatusText = `今天 ${state.identity} 已经照顾满 ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} 次`;
     } else if (myCooldownRemaining > 0) {
-      careStatusText = `\u8fd9\u4e00\u987f\u521a\u7167\u987e\u8fc7\uff0c${state.identity} \u8fd8\u8981\u518d\u7b49\u4e00\u4f1a`;
+      careStatusText = `这一顿刚照顾过，${state.identity} 还要再等一会`;
     } else if (lastFeedAt) {
-      careStatusText = "\u4eca\u5929\u8fd8\u53ef\u4ee5\u7ee7\u7eed\u7167\u987e";
+      careStatusText = "今天还可以继续照顾";
     }
 
     return {
@@ -447,85 +375,77 @@
 
     if (elements.babyCardText) {
       elements.babyCardText.textContent =
-        "\u4f60\u4eec\u4e00\u8d77\u7167\u987e\u8fd9\u5bf9\u5b9d\u5b9d\u3002\u6bcf\u6b21\u7167\u987e 50ml\uff0c\u7167\u987e\u5b8c\u4f1a\u7761 2 \u5c0f\u65f6\uff1b4000ml \u7b97\u966a\u4ed6\u4eec\u8d70\u5230\u534a\u5c81\uff0c\u4e4b\u540e\u5c31\u6309 2.5 \u5e74\u6162\u6162\u957f\u5230 18 \u5c81\u3002\u6bcf\u4eba\u6bcf\u5929\u6700\u591a\u7167\u987e 4 \u6b21\uff0c\u60f3\u8d77\u6765\u5c31\u4e0a\u6765\u966a\u4ed6\u4eec\u4e00\u70b9\u3002";
+        "你们一起照顾这对宝宝。每次照顾 50ml，照顾完会睡 2 小时；4000ml 算陪他们走到半岁，之后就按 2.5 年慢慢长到 18 岁。每人每天最多照顾 4 次，想起来就上来陪他们一点。";
     }
     elements.babyRoom.className = `baby-room ${stats.scene}${stats.hungerStage === "very-hungry" ? " is-very-hungry" : ""}`;
     elements.babyStatusBadge.textContent = stats.ageBadgeText;
     elements.babyTotalAmount.textContent = `${stats.totalAmount}ml`;
-    elements.babyTotalAmount.previousElementSibling &&
-      (elements.babyTotalAmount.previousElementSibling.textContent = "\u7d2f\u8ba1\u5976\u91cf");
+    if (elements.babyTotalAmount.previousElementSibling) {
+      elements.babyTotalAmount.previousElementSibling.textContent = "累计奶量";
+    }
     if (elements.babyCurrentAge) {
       elements.babyCurrentAge.textContent = stats.currentAgeLabel;
-      elements.babyCurrentAge.previousElementSibling && (elements.babyCurrentAge.previousElementSibling.textContent = "\u5f53\u524d\u5e74\u9f84");
+      if (elements.babyCurrentAge.previousElementSibling) {
+        elements.babyCurrentAge.previousElementSibling.textContent = "当前年龄";
+      }
     }
     if (elements.babyNextAgeCountdown) {
-      elements.babyNextAgeCountdown.textContent =
-        stats.nextAge === null
-          ? `\u5df2\u523018\u5c81`
-          : `\u8fd8\u6709 ${stats.daysUntilNextAge} \u5929`;
-      elements.babyNextAgeCountdown.previousElementSibling &&
-        (elements.babyNextAgeCountdown.previousElementSibling.textContent = "\u8ddd\u4e0b\u4e00\u5c81");
+      elements.babyNextAgeCountdown.textContent = stats.nextAge === null ? "已到18岁" : `还有 ${stats.daysUntilNextAge} 天`;
+      if (elements.babyNextAgeCountdown.previousElementSibling) {
+        elements.babyNextAgeCountdown.previousElementSibling.textContent = "距下一岁";
+      }
     }
-    elements.babyHaohaoCount.previousElementSibling &&
-      (elements.babyHaohaoCount.previousElementSibling.textContent = "\u53f7\u53f7\u4eca\u5929");
-    elements.babyXiuqinCount.previousElementSibling &&
-      (elements.babyXiuqinCount.previousElementSibling.textContent = "\u79c0\u7434\u4eca\u5929");
-    elements.babyHaohaoCount.textContent = `${stats.haohaoToday} / ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} \u6b21`;
-    elements.babyXiuqinCount.textContent = `${stats.xiuqinToday} / ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} \u6b21`;
+    if (elements.babyHaohaoCount.previousElementSibling) {
+      elements.babyHaohaoCount.previousElementSibling.textContent = "号号今天";
+    }
+    if (elements.babyXiuqinCount.previousElementSibling) {
+      elements.babyXiuqinCount.previousElementSibling.textContent = "秀琴今天";
+    }
+    elements.babyHaohaoCount.textContent = `${stats.haohaoToday} / ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} 次`;
+    elements.babyXiuqinCount.textContent = `${stats.xiuqinToday} / ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} 次`;
     elements.babyFeedState.textContent = stats.careStatusText;
-    elements.babyFeedState.previousElementSibling &&
-      (elements.babyFeedState.previousElementSibling.textContent = "\u4eca\u65e5\u7167\u987e\u72b6\u6001");
+    if (elements.babyFeedState.previousElementSibling) {
+      elements.babyFeedState.previousElementSibling.textContent = "今日照顾状态";
+    }
     elements.babyProgressFill.style.width = `${stats.progressPercent}%`;
 
     if (!stats.lastFeedAt) {
-      elements.babyProgressHint.textContent =
-        "\u5148\u5582\u7b2c\u4e00\u987f\u5976\u5427\uff0c\u559d\u5b8c 50ml \u540e\u5b9d\u5b9d\u4f1a\u5b89\u7a33\u7761 2 \u5c0f\u65f6\u3002";
+      elements.babyProgressHint.textContent = "先喂第一顿奶吧，喝完 50ml 后宝宝会安稳睡 2 小时。";
     } else if (stats.reachedAge === 0.5) {
-      elements.babyProgressHint.textContent =
-        `4000ml \u5df2\u7ecf\u966a\u5230\u534a\u5c81\u5566\uff0c\u8ddd\u79bb ${stats.nextAge || 1} \u5c81\u8fd8\u6709 ${stats.daysUntilNextAge} \u5929\u3002`;
+      elements.babyProgressHint.textContent = `4000ml 已经陪到半岁啦，距离 ${stats.nextAge || 1} 岁还有 ${stats.daysUntilNextAge} 天。`;
     } else if (stats.nextAge === null) {
-      elements.babyProgressHint.textContent =
-        "\u5df2\u7ecf\u957f\u5230 18 \u5c81\u5566\uff0c\u540e\u9762\u53ef\u4ee5\u518d\u7ed9\u5b69\u5b50\u5355\u72ec\u505a\u6210\u5e74\u540e\u7684\u751f\u6d3b\u6a21\u5f0f\u3002";
+      elements.babyProgressHint.textContent = "已经长到 18 岁啦，后面可以再给孩子单独做成年后的生活模式。";
     } else if (stats.myTodayCount >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON) {
-      elements.babyProgressHint.textContent =
-        `\u4f60\u4eca\u5929\u5df2\u7ecf\u7167\u987e\u6ee1 ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} \u6b21\u4e86\uff0c\u73b0\u5728\u8f6e\u5230\u5bf9\u65b9\u7ee7\u7eed\u966a\u4ed6\u4eec\u957f\u5927\u3002`;
+      elements.babyProgressHint.textContent = `你今天已经照顾满 ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} 次了，现在轮到对方继续陪他们长大。`;
     } else if (stats.myCooldownRemaining > 0) {
-      elements.babyProgressHint.textContent = `\u4f60\u8fd9\u8fb9\u521a\u5582\u8fc7\uff0c\u4e0b\u4e00\u6b21\u8981\u7b49\u5230 ${formatBabyClock(
-        stats.myNextFeedAt
-      )} \u5de6\u53f3\u3002`;
+      elements.babyProgressHint.textContent = `你这边刚喂过，下一次要等到 ${formatBabyClock(stats.myNextFeedAt)} 左右。`;
     } else if (stats.hungerStage === "very-hungry") {
-      elements.babyProgressHint.textContent = `\u8ddd\u79bb\u4e0a\u6b21\u5582\u5976\u5df2\u7ecf\u8fc7\u53bb ${formatBabyDuration(
-        stats.overdueMs
-      )}\uff0c\u5b9d\u5b9d\u59d4\u5c48\u5f97\u54c7\u54c7\u54ed\u4e86\uff0c\u5feb\u6765\u8865\u8fd9 50ml\u3002`;
+      elements.babyProgressHint.textContent = `距离上次喂奶已经过去 ${formatBabyDuration(stats.overdueMs)}，宝宝委屈得哇哇哭了，快来补这 50ml。`;
     } else if (stats.hungerStage === "hungry") {
-      elements.babyProgressHint.textContent = `\u8ddd\u79bb\u4e0a\u6b21\u5582\u5976\u5df2\u7ecf\u8fc7\u53bb ${formatBabyDuration(
-        stats.overdueMs
-      )}\uff0c\u5b9d\u5b9d\u997f\u4e86\uff0c\u5feb\u6765\u8865\u8fd9 50ml\u3002`;
+      elements.babyProgressHint.textContent = `距离上次喂奶已经过去 ${formatBabyDuration(stats.overdueMs)}，宝宝饿了，快来补这 50ml。`;
     } else {
-      elements.babyProgressHint.textContent = `\u521a\u559d\u5b8c\u5976\uff0c\u5b9d\u5b9d\u4f1a\u7761\u5230 ${formatBabyClock(
-        stats.nextFeedAt
-      )} \u5de6\u53f3\u3002`;
+      elements.babyProgressHint.textContent = `刚喝完奶，宝宝会睡到 ${formatBabyClock(stats.nextFeedAt)} 左右。`;
     }
 
     elements.babyFeedButton.disabled = !stats.canFeed;
     if (stats.myTodayCount >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON) {
-      elements.babyFeedButton.textContent = "\u4f60\u4eca\u5929\u5582\u6ee1\u4e86";
+      elements.babyFeedButton.textContent = "你今天喂满了";
     } else if (stats.myCooldownRemaining > 0 && stats.myLastFeedAt) {
-      elements.babyFeedButton.textContent = `\u8fd8\u8981\u7b49 ${formatBabyDuration(stats.myCooldownRemaining)}`;
+      elements.babyFeedButton.textContent = `还要等 ${formatBabyDuration(stats.myCooldownRemaining)}`;
     } else {
       elements.babyFeedButton.textContent = getBabyInteractionLabel(stats.reachedAge);
     }
 
     const syncHint =
       state.babyFeedSyncMode === "local" && state.hasSupabase
-        ? "\u8fd9\u5f20\u5361\u5f53\u524d\u5148\u4fdd\u5b58\u5728\u672c\u673a\uff0c\u7b49\u4e91\u7aef\u8865\u4e0a\u5b9d\u5b9d\u5582\u517b\u8868\u540e\uff0c\u4e24\u90e8\u624b\u673a\u4e5f\u80fd\u540c\u6b65\u3002"
+        ? "这张卡当前先保存在本机，等云端补上宝宝喂养表后，两部手机也能同步。"
         : stats.nextAge === null
-          ? `\u4f60\u4eca\u5929\u8fd8\u53ef\u4ee5\u518d\u7167\u987e ${myRemaining} \u6b21\uff0c\u8fd9\u5bf9\u5b9d\u5b9d\u5df2\u7ecf\u8dd1\u5230\u6210\u5e74\u7ed3\u70b9\u4e86\u3002`
-          : `\u4f60\u4eca\u5929\u8fd8\u53ef\u4ee5\u518d\u7167\u987e ${myRemaining} \u6b21\uff0c\u8ddd\u79bb ${stats.nextAge} \u5c81\u8fd8\u6709 ${stats.daysUntilNextAge} \u5929\u3002`;
+          ? `你今天还可以再照顾 ${myRemaining} 次，这对宝宝已经跑到成年终点了。`
+          : `你今天还可以再照顾 ${myRemaining} 次，距离 ${stats.nextAge} 岁还有 ${stats.daysUntilNextAge} 天。`;
 
     renderInfoPanel(
       elements.babySummary,
-      `\u4eca\u5929\u4e00\u5171\u7167\u987e\u4e86 ${stats.todayRows.length * BABY_FEED_AMOUNT}ml\uff0c\u7d2f\u8ba1 ${stats.totalAmount}ml\uff0c\u73b0\u5728 ${stats.currentAgeLabel}\u3002`,
+      `今天一共照顾了 ${stats.todayRows.length * BABY_FEED_AMOUNT}ml，累计 ${stats.totalAmount}ml，现在 ${stats.currentAgeLabel}。`,
       syncHint
     );
 
@@ -542,25 +462,13 @@
       return;
     }
 
-    const requestSeq = ++state.babyFeedHydrateSeq;
-    const mutationSnapshot = state.babyFeedMutationSeq;
     const rows = await fetchBabyFeedRows({
       orderColumn: "created_at",
       ascending: true,
       limit: 160
     });
 
-    if (requestSeq !== state.babyFeedHydrateSeq) {
-      return;
-    }
-
-    if (mutationSnapshot !== state.babyFeedMutationSeq && state.pendingBabyFeeds.length) {
-      state.babyRows = mergePendingBabyRows(state.babyRows);
-      renderBabyFeeds();
-      return;
-    }
-
-    state.babyRows = mergePendingBabyRows(rows);
+    state.babyRows = rows;
     renderBabyFeeds();
   };
 
@@ -580,32 +488,19 @@
       return;
     }
 
-    state.babyFeedMutationSeq += 1;
-    state.babyFeedHydrateSeq += 1;
     const nowIso = new Date().toISOString();
-    const optimisticRow = {
+    await insertBabyFeedRow({
       id: crypto.randomUUID(),
       person: state.identity,
       feed_date: getTodayKey(),
       amount: BABY_FEED_AMOUNT,
       created_at: nowIso
-    };
+    });
 
-    queuePendingBabyRow(optimisticRow);
-    state.babyRows = mergePendingBabyRows([...rows, optimisticRow]);
     babyJustFedShownKey = `${state.identity}:${new Date(nowIso).getTime()}`;
     clearBabyAmbientTimer();
     spawnBabyFeedAnimation(state.identity);
-    renderBabyFeeds();
-
-    const insertResult = await insertBabyFeedRow(optimisticRow);
-
-    if (insertResult?.mode === "cloud") {
-      await hydrateBabyFeeds();
-    } else {
-      state.babyRows = mergePendingBabyRows(state.babyRows);
-      renderBabyFeeds();
-    }
+    await hydrateBabyFeeds();
     if (typeof hydrateHeroBoard === "function") {
       await hydrateHeroBoard();
     }
