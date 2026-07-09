@@ -48,6 +48,18 @@
     return row.id || [row.person, row.feed_date, row.amount, row.created_at].join("|");
   }
 
+  function queuePendingBabyRow(row) {
+    const rowKey = getBabyRowKey(row);
+    if (!rowKey) {
+      return;
+    }
+
+    const pendingKeys = new Set(state.pendingBabyFeeds.map(getBabyRowKey));
+    if (!pendingKeys.has(rowKey)) {
+      state.pendingBabyFeeds = [...state.pendingBabyFeeds, row];
+    }
+  }
+
   function mergePendingBabyRows(rows = []) {
     const serverRows = Array.isArray(rows) ? rows : [];
     const serverKeys = new Set(serverRows.map(getBabyRowKey));
@@ -559,7 +571,7 @@
       created_at: nowIso
     };
 
-    state.pendingBabyFeeds = mergePendingBabyRows([...state.pendingBabyFeeds, optimisticRow]);
+    queuePendingBabyRow(optimisticRow);
     state.babyRows = mergePendingBabyRows([...rows, optimisticRow]);
     babyJustFedShownKey = `${state.identity}:${new Date(nowIso).getTime()}`;
     clearBabyAmbientTimer();
