@@ -652,7 +652,7 @@ async function insertBabyFeedRow(payload) {
     writeJson(localKeys.babyFeeds, rows);
     invalidateRowsCache(tableNames.babyFeeds);
     state.babyFeedSyncMode = "local";
-    return;
+    return { mode: "local" };
   }
 
   const { error } = await state.supabase.from(tableNames.babyFeeds).insert(payload);
@@ -662,10 +662,11 @@ async function insertBabyFeedRow(payload) {
     rows.push(payload);
     writeJson(localKeys.babyFeeds, rows);
     state.babyFeedSyncMode = "local";
-    return;
+    return { mode: "local", error };
   }
 
   state.babyFeedSyncMode = "cloud";
+  return { mode: "cloud" };
 }
 
 function formatBabyDuration(ms) {

@@ -523,7 +523,7 @@
     }
 
     const nowIso = new Date().toISOString();
-    await insertBabyFeedRow({
+    const insertResult = await insertBabyFeedRow({
       id: crypto.randomUUID(),
       person: state.identity,
       feed_date: getTodayKey(),
@@ -545,7 +545,9 @@
     clearBabyAmbientTimer();
     spawnBabyFeedAnimation(state.identity);
     renderBabyFeeds();
-    await hydrateBabyFeeds();
+    if (insertResult?.mode === "cloud") {
+      await hydrateBabyFeeds();
+    }
     if (typeof hydrateHeroBoard === "function") {
       await hydrateHeroBoard();
     }
