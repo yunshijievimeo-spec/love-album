@@ -489,18 +489,29 @@
     }
 
     const nowIso = new Date().toISOString();
-    await insertBabyFeedRow({
+    const payload = {
       id: crypto.randomUUID(),
       person: state.identity,
       feed_date: getTodayKey(),
       amount: BABY_FEED_AMOUNT,
       created_at: nowIso
-    });
+    };
+
+    const insertResult = await insertBabyFeedRow(payload);
 
     babyJustFedShownKey = `${state.identity}:${new Date(nowIso).getTime()}`;
     clearBabyAmbientTimer();
     spawnBabyFeedAnimation(state.identity);
-    await hydrateBabyFeeds();
+    if (insertResult?.mode === "cloud") {
+      await hydrateBabyFeeds();
+    } else {
+      state.babyRows = [...rows, payload].sort((left, right) => {
+        const leftTime = new Date(left.created_at || 0).getTime();
+        const rightTime = new Date(right.created_at || 0).getTime();
+        return leftTime - rightTime;
+      });
+      renderBabyFeeds();
+    }
     if (typeof hydrateHeroBoard === "function") {
       await hydrateHeroBoard();
     }
