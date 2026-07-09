@@ -531,9 +531,20 @@
       created_at: nowIso
     });
 
+    state.babyRows = [
+      ...rows,
+      {
+        person: state.identity,
+        feed_date: getTodayKey(),
+        amount: BABY_FEED_AMOUNT,
+        created_at: nowIso
+      }
+    ];
+
     babyJustFedShownKey = `${state.identity}:${new Date(nowIso).getTime()}`;
     clearBabyAmbientTimer();
     spawnBabyFeedAnimation(state.identity);
+    renderBabyFeeds();
     await hydrateBabyFeeds();
     if (typeof hydrateHeroBoard === "function") {
       await hydrateHeroBoard();
