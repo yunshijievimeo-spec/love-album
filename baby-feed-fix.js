@@ -1,6 +1,7 @@
 (function () {
-  const BABY_FEED_INTERVAL_OVERRIDE_MS = 2 * 60 * 60 * 1000;
-  const BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON = 4;
+  const BABY_FEED_INTERVAL_MS = 2 * 60 * 60 * 1000;
+  const BABY_DAILY_LIMIT_PER_PERSON = 4;
+  const BABY_FEED_AMOUNT = 50;
   const BABY_HALF_YEAR_MILESTONE_AMOUNT = 4000;
   const BABY_GROWTH_TOTAL_DAYS = 913;
   const BABY_GROWTH_FINAL_AGE = 18;
@@ -11,24 +12,20 @@
   const BABY_VERY_HUNGRY_AFTER_MS = 45 * 60 * 1000;
   const BABY_HUNGRY_DELAY_RANGE = [6000, 10000];
   const BABY_VERY_HUNGRY_DELAY_RANGE = [4000, 7000];
-  const BABY_AGE_CELEBRATION_KEY = "love-room-baby-age-celebration";
+  const BABY_AGE_CELEBRATION_KEY = "love-room-baby-age-celebration-v2";
+  const BABY_BASELINE_PERSON = "__baseline__";
+  const BABY_BASELINE_ID = "baby-baseline-v2";
+  const BABY_DEFAULT_START_AT = "2026-07-09T00:00:00+08:00";
+  const BABY_RESET_START_AT = "2026-07-09T16:12:05.691+08:00";
   const BABY_VIEWER_FEED_MESSAGES = {
-    "号号": ["谢谢爸爸", "饱饱啦"],
-    "秀琴": ["谢谢妈妈", "奶香香"]
+    号号: ["谢谢爸爸", "饱饱啦"],
+    秀琴: ["谢谢妈妈", "奶香香"]
   };
-  const BABY_HUNGRY_MESSAGES = ["爸妈我饿了", "哇呜", "奶奶呢", "快来抱抱我"];
-  const BABY_VERY_HUNGRY_MESSAGES = ["爸妈怎么还没来", "我要哭哭了", "呜呜饿饿", "宝宝委屈"];
+  const BABY_HUNGRY_MESSAGES = ["爸妈我饿了", "肚肚咕咕了", "想找爸爸妈妈"];
+  const BABY_VERY_HUNGRY_MESSAGES = ["爸妈我饿了", "我要哭哭了", "想找爸爸妈妈"];
 
   let babyAmbientTimer = 0;
   let babyJustFedShownKey = "";
-
-  function normalizePersonRows(rows, person) {
-    return rows.filter((item) => normalizeIdentity(item.person) === person);
-  }
-
-  function randomBetween(min, max) {
-    return Math.round(min + Math.random() * (max - min));
-  }
 
   function clearBabyAmbientTimer() {
     if (babyAmbientTimer) {
@@ -37,94 +34,15 @@
     }
   }
 
+  function randomBetween(min, max) {
+    return Math.round(min + Math.random() * (max - min));
+  }
+
   function getBabyAnchors() {
     return [
       { left: 86, top: 98, heartLeft: 104, heartTop: 132 },
       { left: 258, top: 98, heartLeft: 276, heartTop: 132 }
     ];
-  }
-
-  function getViewerFeedMessages(person = state.identity) {
-    return BABY_VIEWER_FEED_MESSAGES[normalizeIdentity(person)] || ["谢谢你们", "饱饱啦"];
-  }
-
-  function getBabyGrowthStartTime(rows) {
-    const firstRow = rows.find((item) => item.created_at);
-    return firstRow ? new Date(firstRow.created_at).getTime() : 0;
-  }
-
-  function getBabyRowDateKey(item) {
-    const createdAt = item?.created_at ? new Date(item.created_at) : null;
-    if (createdAt && !Number.isNaN(createdAt.getTime())) {
-      const year = createdAt.getFullYear();
-      const month = String(createdAt.getMonth() + 1).padStart(2, "0");
-      const day = String(createdAt.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    }
-
-    return item?.feed_date || "";
-  }
-
-  function getBabyReachedAge(ageValue) {
-    let reachedAge = 0;
-    BABY_GROWTH_MILESTONES.forEach((milestone) => {
-      if (ageValue >= milestone) {
-        reachedAge = milestone;
-      }
-    });
-    return reachedAge;
-  }
-
-  function formatBabyAge(ageValue) {
-    if (ageValue >= BABY_GROWTH_FINAL_AGE) {
-      return `已经 ${BABY_GROWTH_FINAL_AGE} 岁啦`;
-    }
-
-    if (ageValue === 0.5) {
-      return "半岁啦";
-    }
-
-    if (ageValue <= 0) {
-      return "刚来到你们身边";
-    }
-
-    return `${ageValue}岁啦`;
-  }
-
-  function formatBabyAgeShort(ageValue) {
-    if (ageValue >= BABY_GROWTH_FINAL_AGE) {
-      return `${BABY_GROWTH_FINAL_AGE}岁`;
-    }
-
-    if (ageValue === 0.5) {
-      return "半岁";
-    }
-
-    if (ageValue <= 0) {
-      return "新生";
-    }
-
-    return `${ageValue}岁`;
-  }
-
-  function getBabyNextMilestone(ageValue) {
-    return BABY_GROWTH_MILESTONES.find((milestone) => milestone > ageValue) || null;
-  }
-
-  function getBabyInteractionLabel(ageValue) {
-    if (ageValue >= 13) {
-      return "看看今天怎么样";
-    }
-
-    if (ageValue >= 6) {
-      return "陪今天长大一点";
-    }
-
-    if (ageValue >= 2) {
-      return "喂饭饭";
-    }
-
-    return `喂 ${BABY_FEED_AMOUNT}ml 奶`;
   }
 
   function removeBabyEffectLater(node, delay = 2200) {
@@ -151,7 +69,8 @@
       return;
     }
 
-    const [leftText, rightText] = getViewerFeedMessages(person);
+    const normalizedPerson = normalizeIdentity(person);
+    const [leftText, rightText] = BABY_VIEWER_FEED_MESSAGES[normalizedPerson] || ["谢谢你们", "饱饱啦"];
     const anchors = getBabyAnchors();
 
     spawnBabyPhrase(leftText, anchors[0], "baby-thanks");
@@ -188,24 +107,6 @@
     spawnBabyPhrase(ageText, anchors[1], "baby-thanks", "0.08s");
   }
 
-  function maybeCelebrateBabyAge(stats) {
-    if (!stats.reachedAge || stats.reachedAge > BABY_GROWTH_FINAL_AGE) {
-      return;
-    }
-
-    const celebrationKey = formatBabyAgeShort(stats.reachedAge);
-    const savedKey = localStorage.getItem(BABY_AGE_CELEBRATION_KEY);
-
-    if (savedKey === celebrationKey) {
-      return;
-    }
-
-    if (stats.reachedAge === 0.5 || Number.isInteger(stats.reachedAge)) {
-      localStorage.setItem(BABY_AGE_CELEBRATION_KEY, celebrationKey);
-      triggerBabyAgeCelebration(formatBabyAge(stats.reachedAge));
-    }
-  }
-
   function spawnBabyNeedPhrases(messages, urgent = false) {
     if (!elements.babyEffects || !messages.length) {
       return;
@@ -218,6 +119,108 @@
 
     spawnBabyPhrase(leftText, anchors[0], className);
     spawnBabyPhrase(rightText, anchors[1], className, "0.06s");
+  }
+
+  function formatDateKeyFromDate(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function getRowTimestamp(item) {
+    const createdAt = item?.created_at ? new Date(item.created_at) : null;
+    if (createdAt && !Number.isNaN(createdAt.getTime())) {
+      return createdAt.getTime();
+    }
+
+    if (item?.feed_date) {
+      const date = new Date(`${item.feed_date}T00:00:00`);
+      if (!Number.isNaN(date.getTime())) {
+        return date.getTime();
+      }
+    }
+
+    return 0;
+  }
+
+  function getBabyRowDateKey(item) {
+    const timestamp = getRowTimestamp(item);
+    if (timestamp > 0) {
+      return formatDateKeyFromDate(new Date(timestamp));
+    }
+    return item?.feed_date || "";
+  }
+
+  function sortBabyRows(rows) {
+    return [...rows].sort((left, right) => getRowTimestamp(left) - getRowTimestamp(right));
+  }
+
+  function getBabyReachedAge(ageValue) {
+    let reachedAge = 0;
+    BABY_GROWTH_MILESTONES.forEach((milestone) => {
+      if (ageValue >= milestone) {
+        reachedAge = milestone;
+      }
+    });
+    return reachedAge;
+  }
+
+  function getBabyNextMilestone(ageValue) {
+    return BABY_GROWTH_MILESTONES.find((milestone) => milestone > ageValue) || null;
+  }
+
+  function formatBabyAge(ageValue) {
+    if (ageValue >= BABY_GROWTH_FINAL_AGE) {
+      return `已经 ${BABY_GROWTH_FINAL_AGE} 岁啦`;
+    }
+    if (ageValue === 0.5) {
+      return "半岁啦";
+    }
+    if (ageValue <= 0) {
+      return "刚来到你们身边";
+    }
+    return `${ageValue}岁啦`;
+  }
+
+  function formatBabyAgeShort(ageValue) {
+    if (ageValue >= BABY_GROWTH_FINAL_AGE) {
+      return `${BABY_GROWTH_FINAL_AGE}岁`;
+    }
+    if (ageValue === 0.5) {
+      return "半岁";
+    }
+    if (ageValue <= 0) {
+      return "新生";
+    }
+    return `${ageValue}岁`;
+  }
+
+  function getBabyInteractionLabel(ageValue) {
+    if (ageValue >= 13) {
+      return "看看今天怎么样";
+    }
+    if (ageValue >= 6) {
+      return "陪今天长大一点";
+    }
+    if (ageValue >= 2) {
+      return "喂一顿饭";
+    }
+    return `喂 ${BABY_FEED_AMOUNT}ml 奶`;
+  }
+
+  function maybeCelebrateBabyAge(stats) {
+    if (!stats.reachedAge || stats.reachedAge > BABY_GROWTH_FINAL_AGE) {
+      return;
+    }
+
+    const celebrationKey = formatBabyAgeShort(stats.reachedAge);
+    const savedKey = localStorage.getItem(BABY_AGE_CELEBRATION_KEY);
+    if (savedKey === celebrationKey) {
+      return;
+    }
+
+    if (stats.reachedAge === 0.5 || Number.isInteger(stats.reachedAge)) {
+      localStorage.setItem(BABY_AGE_CELEBRATION_KEY, celebrationKey);
+      triggerBabyAgeCelebration(formatBabyAge(stats.reachedAge));
+    }
   }
 
   function syncBabyAmbientPhrases(stats) {
@@ -256,36 +259,85 @@
     scheduleNext();
   }
 
+  function buildBabyBaselineRow() {
+    return {
+      id: BABY_BASELINE_ID,
+      person: BABY_BASELINE_PERSON,
+      feed_date: "2026-07-09",
+      amount: 8000,
+      created_at: BABY_DEFAULT_START_AT
+    };
+  }
+
+  function getCleanBabyRows(rows = []) {
+    const resetStartMs = new Date(BABY_RESET_START_AT).getTime();
+    const sanitized = (Array.isArray(rows) ? rows : []).filter((item) => {
+      if (!item) {
+        return false;
+      }
+
+      if (item.id === BABY_BASELINE_ID || item.person === BABY_BASELINE_PERSON) {
+        return false;
+      }
+
+      const person = normalizeIdentity(item.person);
+      if (!GARDEN_PEOPLE.includes(person)) {
+        return false;
+      }
+
+      const amount = Number(item.amount || 0);
+      if (amount <= 0 || amount > BABY_FEED_AMOUNT) {
+        return false;
+      }
+
+      const timestamp = getRowTimestamp(item);
+      if (!timestamp || timestamp < resetStartMs) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return sortBabyRows([buildBabyBaselineRow(), ...sanitized]);
+  }
+
+  function getBabyGrowthStartTime(rows) {
+    const baselineRow = rows.find((item) => item.id === BABY_BASELINE_ID || item.person === BABY_BASELINE_PERSON);
+    if (baselineRow) {
+      return getRowTimestamp(baselineRow);
+    }
+
+    const firstRealRow = rows.find((item) => GARDEN_PEOPLE.includes(normalizeIdentity(item.person)));
+    return firstRealRow ? getRowTimestamp(firstRealRow) : new Date(BABY_DEFAULT_START_AT).getTime();
+  }
+
   getBabyFeedStats = function getBabyFeedStats(rows = state.babyRows) {
     const today = getTodayKey();
     const now = Date.now();
-    const normalizedRows = [...rows].sort((left, right) => {
-      const leftTime = new Date(left.created_at || 0).getTime();
-      const rightTime = new Date(right.created_at || 0).getTime();
-      return leftTime - rightTime;
-    });
-
+    const normalizedRows = getCleanBabyRows(rows);
+    const realRows = normalizedRows.filter((item) => item.person !== BABY_BASELINE_PERSON);
     const totalAmount = normalizedRows.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-    const todayRows = normalizedRows.filter((item) => getBabyRowDateKey(item) === today);
-    const haohaoToday = normalizePersonRows(todayRows, GARDEN_PEOPLE[0]).length;
-    const xiuqinToday = normalizePersonRows(todayRows, GARDEN_PEOPLE[1]).length;
+    const todayRows = realRows.filter((item) => getBabyRowDateKey(item) === today);
+    const haohaoToday = todayRows.filter((item) => normalizeIdentity(item.person) === GARDEN_PEOPLE[0]).length;
+    const xiuqinToday = todayRows.filter((item) => normalizeIdentity(item.person) === GARDEN_PEOPLE[1]).length;
     const myTodayCount = state.identity === GARDEN_PEOPLE[0] ? haohaoToday : xiuqinToday;
     const bothDailyFull =
-      haohaoToday >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON && xiuqinToday >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON;
+      haohaoToday >= BABY_DAILY_LIMIT_PER_PERSON && xiuqinToday >= BABY_DAILY_LIMIT_PER_PERSON;
 
-    const myRows = normalizePersonRows(normalizedRows, state.identity);
+    const myRows = realRows.filter((item) => normalizeIdentity(item.person) === state.identity);
     const myLastRow = myRows[myRows.length - 1] || null;
-    const myLastFeedAt = myLastRow ? new Date(myLastRow.created_at || 0).getTime() : 0;
-    const myNextFeedAt = myLastFeedAt ? myLastFeedAt + BABY_FEED_INTERVAL_OVERRIDE_MS : 0;
+    const myLastFeedAt = myLastRow ? getRowTimestamp(myLastRow) : 0;
+    const myNextFeedAt = myLastFeedAt ? myLastFeedAt + BABY_FEED_INTERVAL_MS : 0;
     const myCooldownRemaining = myNextFeedAt ? Math.max(0, myNextFeedAt - now) : 0;
 
-    const lastRow = normalizedRows[normalizedRows.length - 1] || null;
-    const lastFeedAt = lastRow ? new Date(lastRow.created_at || 0).getTime() : 0;
-    const nextFeedAt = lastFeedAt ? lastFeedAt + BABY_FEED_INTERVAL_OVERRIDE_MS : 0;
+    const lastRow = realRows[realRows.length - 1] || null;
+    const lastFeedAt = lastRow ? getRowTimestamp(lastRow) : 0;
+    const nextFeedAt = lastFeedAt ? lastFeedAt + BABY_FEED_INTERVAL_MS : 0;
     const cooldownRemaining = nextFeedAt ? Math.max(0, nextFeedAt - now) : 0;
     const overdueMs = nextFeedAt ? Math.max(0, now - nextFeedAt) : 0;
     const justFed = lastFeedAt ? now - lastFeedAt <= BABY_JUST_FED_WINDOW_MS : false;
     const hungerStage = overdueMs <= 0 ? "" : overdueMs >= BABY_VERY_HUNGRY_AFTER_MS ? "very-hungry" : "hungry";
+
     const growthStartAt = getBabyGrowthStartTime(normalizedRows);
     const elapsedDays = growthStartAt ? Math.max(0, (now - growthStartAt) / BABY_GROWTH_MS_PER_DAY) : 0;
     const timelineAge = Math.min(BABY_GROWTH_FINAL_AGE, elapsedDays / BABY_GROWTH_DAYS_PER_YEAR);
@@ -297,12 +349,11 @@
     const daysUntilNextAge = nextAgeAtDay === null ? 0 : Math.max(0, Math.ceil(nextAgeAtDay - elapsedDays));
     const currentAgeLabel = formatBabyAgeShort(reachedAge);
     const ageBadgeText = formatBabyAge(reachedAge);
-
-    const canFeed = myTodayCount < BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON && (!myLastFeedAt || myCooldownRemaining <= 0);
+    const canFeed = myTodayCount < BABY_DAILY_LIMIT_PER_PERSON && (!myLastFeedAt || myCooldownRemaining <= 0);
 
     let scene = "is-waiting";
     let statusText = "等第一顿奶";
-    let careStatusText = "等第一顿奶";
+    let careStatusText = "今天还没开始照顾";
 
     if (!lastFeedAt) {
       scene = "is-waiting";
@@ -310,11 +361,11 @@
       careStatusText = "今天还没开始照顾";
     } else if (hungerStage === "very-hungry") {
       scene = "is-crying";
-      statusText = "饿坏啦";
+      statusText = "哭哭中";
       careStatusText = "宝宝饿得哇哇哭";
     } else if (hungerStage === "hungry") {
       scene = "is-crying";
-      statusText = "肚肚饿了";
+      statusText = "有点饿啦";
       careStatusText = "宝宝在等你们来照顾";
     } else {
       scene = "is-sleeping";
@@ -323,10 +374,9 @@
     }
 
     if (bothDailyFull && cooldownRemaining > 0 && !hungerStage) {
-      statusText = "睡觉中";
       careStatusText = "今天你们都照顾满了";
-    } else if (myTodayCount >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON) {
-      careStatusText = `今天 ${state.identity} 已经照顾满 ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} 次`;
+    } else if (myTodayCount >= BABY_DAILY_LIMIT_PER_PERSON) {
+      careStatusText = `今天 ${state.identity} 已经照顾满 ${BABY_DAILY_LIMIT_PER_PERSON} 次`;
     } else if (myCooldownRemaining > 0) {
       careStatusText = `这一顿刚照顾过，${state.identity} 还要再等一会`;
     } else if (lastFeedAt) {
@@ -356,7 +406,6 @@
       hungerStage,
       growthStartAt,
       elapsedDays,
-      timelineAge,
       reachedAge,
       nextAge,
       daysUntilNextAge,
@@ -383,42 +432,25 @@
     }
 
     const stats = getBabyFeedStats();
-    const myRemaining = Math.max(0, BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON - stats.myTodayCount);
+    const myRemaining = Math.max(0, BABY_DAILY_LIMIT_PER_PERSON - stats.myTodayCount);
 
     if (elements.babyCardText) {
       elements.babyCardText.textContent =
-        "你们一起照顾这对宝宝。每次照顾 50ml，照顾完会睡 2 小时；4000ml 算陪他们走到半岁，之后就按 2.5 年慢慢长到 18 岁。每人每天最多照顾 4 次，想起来就上来陪他们一点。";
+        "你们一起照顾这对宝宝。每次喂 50ml，喂完会睡 2 小时。4000ml 算陪到半岁，之后按 2.5 年慢慢长到 18 岁。每人每天最多照顾 4 次。";
     }
+
     elements.babyRoom.className = `baby-room ${stats.scene}${stats.hungerStage === "very-hungry" ? " is-very-hungry" : ""}`;
     elements.babyStatusBadge.textContent = stats.ageBadgeText;
     elements.babyTotalAmount.textContent = `${stats.totalAmount}ml`;
-    if (elements.babyTotalAmount.previousElementSibling) {
-      elements.babyTotalAmount.previousElementSibling.textContent = "累计奶量";
-    }
     if (elements.babyCurrentAge) {
       elements.babyCurrentAge.textContent = stats.currentAgeLabel;
-      if (elements.babyCurrentAge.previousElementSibling) {
-        elements.babyCurrentAge.previousElementSibling.textContent = "当前年龄";
-      }
     }
     if (elements.babyNextAgeCountdown) {
       elements.babyNextAgeCountdown.textContent = stats.nextAge === null ? "已到18岁" : `还有 ${stats.daysUntilNextAge} 天`;
-      if (elements.babyNextAgeCountdown.previousElementSibling) {
-        elements.babyNextAgeCountdown.previousElementSibling.textContent = "距下一岁";
-      }
     }
-    if (elements.babyHaohaoCount.previousElementSibling) {
-      elements.babyHaohaoCount.previousElementSibling.textContent = "号号今天";
-    }
-    if (elements.babyXiuqinCount.previousElementSibling) {
-      elements.babyXiuqinCount.previousElementSibling.textContent = "秀琴今天";
-    }
-    elements.babyHaohaoCount.textContent = `${stats.haohaoToday} / ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} 次`;
-    elements.babyXiuqinCount.textContent = `${stats.xiuqinToday} / ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} 次`;
+    elements.babyHaohaoCount.textContent = `${stats.haohaoToday} / ${BABY_DAILY_LIMIT_PER_PERSON} 次`;
+    elements.babyXiuqinCount.textContent = `${stats.xiuqinToday} / ${BABY_DAILY_LIMIT_PER_PERSON} 次`;
     elements.babyFeedState.textContent = stats.careStatusText;
-    if (elements.babyFeedState.previousElementSibling) {
-      elements.babyFeedState.previousElementSibling.textContent = "今日照顾状态";
-    }
     elements.babyProgressFill.style.width = `${stats.progressPercent}%`;
 
     if (!stats.lastFeedAt) {
@@ -426,9 +458,9 @@
     } else if (stats.reachedAge === 0.5) {
       elements.babyProgressHint.textContent = `4000ml 已经陪到半岁啦，距离 ${stats.nextAge || 1} 岁还有 ${stats.daysUntilNextAge} 天。`;
     } else if (stats.nextAge === null) {
-      elements.babyProgressHint.textContent = "已经长到 18 岁啦，后面可以再给孩子单独做成年后的生活模式。";
-    } else if (stats.myTodayCount >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON) {
-      elements.babyProgressHint.textContent = `你今天已经照顾满 ${BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON} 次了，现在轮到对方继续陪他们长大。`;
+      elements.babyProgressHint.textContent = "已经长到 18 岁啦。";
+    } else if (stats.myTodayCount >= BABY_DAILY_LIMIT_PER_PERSON) {
+      elements.babyProgressHint.textContent = `你今天已经照顾满 ${BABY_DAILY_LIMIT_PER_PERSON} 次了，现在轮到对方继续陪他们长大。`;
     } else if (stats.myCooldownRemaining > 0) {
       elements.babyProgressHint.textContent = `你这边刚喂过，下一次要等到 ${formatBabyClock(stats.myNextFeedAt)} 左右。`;
     } else if (stats.hungerStage === "very-hungry") {
@@ -440,7 +472,7 @@
     }
 
     elements.babyFeedButton.disabled = !stats.canFeed;
-    if (stats.myTodayCount >= BABY_DAILY_LIMIT_OVERRIDE_PER_PERSON) {
+    if (stats.myTodayCount >= BABY_DAILY_LIMIT_PER_PERSON) {
       elements.babyFeedButton.textContent = "你今天喂满了";
     } else if (stats.myCooldownRemaining > 0 && stats.myLastFeedAt) {
       elements.babyFeedButton.textContent = `还要等 ${formatBabyDuration(stats.myCooldownRemaining)}`;
@@ -452,7 +484,7 @@
       state.babyFeedSyncMode === "local" && state.hasSupabase
         ? "这张卡当前先保存在本机，等云端补上宝宝喂养表后，两部手机也能同步。"
         : stats.nextAge === null
-          ? `你今天还可以再照顾 ${myRemaining} 次，这对宝宝已经跑到成年终点了。`
+          ? `你今天还可以再照顾 ${myRemaining} 次，这对宝宝已经长大啦。`
           : `你今天还可以再照顾 ${myRemaining} 次，距离 ${stats.nextAge} 岁还有 ${stats.daysUntilNextAge} 天。`;
 
     renderInfoPanel(
@@ -479,17 +511,19 @@
       ascending: true
     });
 
-    state.babyRows = rows;
+    state.babyRows = getCleanBabyRows(rows);
     renderBabyFeeds();
   };
 
   handleBabyFeed = async function handleBabyFeed() {
     const rows = state.babyRows.length
       ? state.babyRows
-      : await fetchBabyFeedRows({
-          orderColumn: "created_at",
-          ascending: true
-        });
+      : getCleanBabyRows(
+          await fetchBabyFeedRows({
+            orderColumn: "created_at",
+            ascending: true
+          })
+        );
 
     state.babyRows = rows;
     const stats = getBabyFeedStats(rows);
@@ -512,16 +546,14 @@
     babyJustFedShownKey = `${state.identity}:${new Date(nowIso).getTime()}`;
     clearBabyAmbientTimer();
     spawnBabyFeedAnimation(state.identity);
+
     if (insertResult?.mode === "cloud") {
       await hydrateBabyFeeds();
     } else {
-      state.babyRows = [...rows, payload].sort((left, right) => {
-        const leftTime = new Date(left.created_at || 0).getTime();
-        const rightTime = new Date(right.created_at || 0).getTime();
-        return leftTime - rightTime;
-      });
+      state.babyRows = getCleanBabyRows([...rows, payload]);
       renderBabyFeeds();
     }
+
     if (typeof hydrateHeroBoard === "function") {
       await hydrateHeroBoard();
     }
