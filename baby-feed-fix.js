@@ -35,6 +35,12 @@
   if (!Array.isArray(state.pendingBabyFeeds)) {
     state.pendingBabyFeeds = [];
   }
+  if (typeof state.babyFeedHydrateSeq !== "number") {
+    state.babyFeedHydrateSeq = 0;
+  }
+  if (typeof state.babyFeedMutationSeq !== "number") {
+    state.babyFeedMutationSeq = 0;
+  }
 
   function normalizePersonRows(rows, person) {
     return rows.filter((item) => normalizeIdentity(item.person) === person);
@@ -536,11 +542,23 @@
       return;
     }
 
+    const requestSeq = ++state.babyFeedHydrateSeq;
+    const mutationSnapshot = state.babyFeedMutationSeq;
     const rows = await fetchBabyFeedRows({
       orderColumn: "created_at",
       ascending: true,
       limit: 160
     });
+
+    if (requestSeq !== state.babyFeedHydrateSeq) {
+      return;
+    }
+
+    if (mutationSnapshot !== state.babyFeedMutationSeq && state.pendingBabyFeeds.length) {
+      state.babyRows = mergePendingBabyRows(state.babyRows);
+      renderBabyFeeds();
+      return;
+    }
 
     state.babyRows = mergePendingBabyRows(rows);
     renderBabyFeeds();
@@ -562,6 +580,8 @@
       return;
     }
 
+    state.babyFeedMutationSeq += 1;
+    state.babyFeedHydrateSeq += 1;
     const nowIso = new Date().toISOString();
     const optimisticRow = {
       id: crypto.randomUUID(),
