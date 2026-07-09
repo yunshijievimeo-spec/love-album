@@ -32,8 +32,36 @@
   let babyAmbientTimer = 0;
   let babyJustFedShownKey = "";
 
+  if (!Array.isArray(state.pendingBabyFeeds)) {
+    state.pendingBabyFeeds = [];
+  }
+
   function normalizePersonRows(rows, person) {
     return rows.filter((item) => normalizeIdentity(item.person) === person);
+  }
+
+  function getBabyRowKey(row) {
+    if (!row) {
+      return "";
+    }
+
+    return row.id || [row.person, row.feed_date, row.amount, row.created_at].join("|");
+  }
+
+  function mergePendingBabyRows(rows = []) {
+    const serverRows = Array.isArray(rows) ? rows : [];
+    const serverKeys = new Set(serverRows.map(getBabyRowKey));
+
+    state.pendingBabyFeeds = state.pendingBabyFeeds.filter((row) => {
+      const rowKey = getBabyRowKey(row);
+      return rowKey && !serverKeys.has(rowKey);
+    });
+
+    return [...serverRows, ...state.pendingBabyFeeds].sort((left, right) => {
+      const leftTime = new Date(left.created_at || 0).getTime();
+      const rightTime = new Date(right.created_at || 0).getTime();
+      return leftTime - rightTime;
+    });
   }
 
   function randomBetween(min, max) {
@@ -502,7 +530,7 @@
       limit: 160
     });
 
-    state.babyRows = rows;
+    state.babyRows = mergePendingBabyRows(rows);
     renderBabyFeeds();
   };
 
@@ -523,30 +551,28 @@
     }
 
     const nowIso = new Date().toISOString();
-    const insertResult = await insertBabyFeedRow({
+    const optimisticRow = {
       id: crypto.randomUUID(),
       person: state.identity,
       feed_date: getTodayKey(),
       amount: BABY_FEED_AMOUNT,
       created_at: nowIso
-    });
+    };
 
-    state.babyRows = [
-      ...rows,
-      {
-        person: state.identity,
-        feed_date: getTodayKey(),
-        amount: BABY_FEED_AMOUNT,
-        created_at: nowIso
-      }
-    ];
-
+    state.pendingBabyFeeds = mergePendingBabyRows([...state.pendingBabyFeeds, optimisticRow]);
+    state.babyRows = mergePendingBabyRows([...rows, optimisticRow]);
     babyJustFedShownKey = `${state.identity}:${new Date(nowIso).getTime()}`;
     clearBabyAmbientTimer();
     spawnBabyFeedAnimation(state.identity);
     renderBabyFeeds();
+
+    const insertResult = await insertBabyFeedRow(optimisticRow);
+
     if (insertResult?.mode === "cloud") {
       await hydrateBabyFeeds();
+    } else {
+      state.babyRows = mergePendingBabyRows(state.babyRows);
+      renderBabyFeeds();
     }
     if (typeof hydrateHeroBoard === "function") {
       await hydrateHeroBoard();
