@@ -464,8 +464,7 @@
 
     const rows = await fetchBabyFeedRows({
       orderColumn: "created_at",
-      ascending: true,
-      limit: 160
+      ascending: true
     });
 
     state.babyRows = rows;
@@ -477,8 +476,7 @@
       ? state.babyRows
       : await fetchBabyFeedRows({
           orderColumn: "created_at",
-          ascending: true,
-          limit: 160
+          ascending: true
         });
 
     state.babyRows = rows;
