@@ -626,16 +626,7 @@ async function fetchBabyFeedRows(options = {}) {
     query = query.limit(options.limit);
   }
 
-  const { data, error } = await (async () => {
-    try {
-      return {
-        data: await fetchRemoteRowsWithCache(tableNames.babyFeeds, options, async () => query),
-        error: null
-      };
-    } catch (error) {
-      return { data: null, error };
-    }
-  })();
+  const { data, error } = await query;
   if (error) {
     state.babyFeedSyncMode = "local";
     return sortLocalRows(readJson(localKeys.babyFeeds, []), options);
