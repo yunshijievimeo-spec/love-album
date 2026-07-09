@@ -139,6 +139,9 @@ const elements = {
   babyProgressFill: document.querySelector("#babyProgressFill"),
   babyProgressHint: document.querySelector("#babyProgressHint"),
   babyFeedButton: document.querySelector("#babyFeedButton"),
+  babyCatchupRow: document.querySelector("#babyCatchupRow"),
+  babyCatchupButton: document.querySelector("#babyCatchupButton"),
+  babyCatchupHint: document.querySelector("#babyCatchupHint"),
   babySummary: document.querySelector("#babySummary")
 };
 

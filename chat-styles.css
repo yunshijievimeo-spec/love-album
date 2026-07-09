@@ -1932,6 +1932,23 @@ h2 {
   gap: 0.75rem;
 }
 
+.baby-catchup-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.baby-catchup-button {
+  min-width: 132px;
+}
+
+.baby-catchup-hint {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .water-drop,
 .water-heart {
   position: absolute;
@@ -2264,6 +2281,19 @@ h2 {
 
   .baby-panel .garden-actions {
     grid-template-columns: 1fr;
+  }
+
+  .baby-catchup-row {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .baby-catchup-button {
+    width: 100%;
+  }
+
+  .baby-catchup-hint {
+    font-size: 0.8rem;
   }
 
   .garden-yearline {
