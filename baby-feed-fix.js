@@ -53,6 +53,18 @@
     return firstRow ? new Date(firstRow.created_at).getTime() : 0;
   }
 
+  function getBabyRowDateKey(item) {
+    const createdAt = item?.created_at ? new Date(item.created_at) : null;
+    if (createdAt && !Number.isNaN(createdAt.getTime())) {
+      const year = createdAt.getFullYear();
+      const month = String(createdAt.getMonth() + 1).padStart(2, "0");
+      const day = String(createdAt.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    return item?.feed_date || "";
+  }
+
   function getBabyReachedAge(ageValue) {
     let reachedAge = 0;
     BABY_GROWTH_MILESTONES.forEach((milestone) => {
@@ -254,7 +266,7 @@
     });
 
     const totalAmount = normalizedRows.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-    const todayRows = normalizedRows.filter((item) => item.feed_date === today);
+    const todayRows = normalizedRows.filter((item) => getBabyRowDateKey(item) === today);
     const haohaoToday = normalizePersonRows(todayRows, GARDEN_PEOPLE[0]).length;
     const xiuqinToday = normalizePersonRows(todayRows, GARDEN_PEOPLE[1]).length;
     const myTodayCount = state.identity === GARDEN_PEOPLE[0] ? haohaoToday : xiuqinToday;
