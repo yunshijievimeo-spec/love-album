@@ -613,9 +613,22 @@ async function hydrateCapsules() {
 }
 
 async function fetchBabyFeedRows(options = {}) {
+  const mergeBabyFeedRows = (remoteRows = [], localRows = []) => {
+    const merged = new Map();
+    [...remoteRows, ...localRows].forEach((item) => {
+      const rowKey = item?.id || [item?.person, item?.feed_date, item?.amount, item?.created_at].join("|");
+      if (rowKey) {
+        merged.set(rowKey, item);
+      }
+    });
+    return sortLocalRows(Array.from(merged.values()), options);
+  };
+
+  const localRows = readJson(localKeys.babyFeeds, []);
+
   if (!state.hasSupabase || !state.supabase) {
     state.babyFeedSyncMode = "local";
-    return sortLocalRows(readJson(localKeys.babyFeeds, []), options);
+    return sortLocalRows(localRows, options);
   }
 
   let query = state.supabase.from(tableNames.babyFeeds).select("*");
@@ -629,18 +642,26 @@ async function fetchBabyFeedRows(options = {}) {
   const { data, error } = await query;
   if (error) {
     state.babyFeedSyncMode = "local";
-    return sortLocalRows(readJson(localKeys.babyFeeds, []), options);
+    return sortLocalRows(localRows, options);
   }
 
   state.babyFeedSyncMode = "cloud";
-  return data || [];
+  return mergeBabyFeedRows(data || [], localRows);
 }
 
 async function insertBabyFeedRow(payload) {
-  if (!state.hasSupabase || !state.supabase) {
-    const rows = readJson(localKeys.babyFeeds, []);
+  const rows = readJson(localKeys.babyFeeds, []);
+  const hasRowAlready = rows.some((item) => {
+    const leftKey = item?.id || [item?.person, item?.feed_date, item?.amount, item?.created_at].join("|");
+    const rightKey = payload?.id || [payload?.person, payload?.feed_date, payload?.amount, payload?.created_at].join("|");
+    return leftKey === rightKey;
+  });
+  if (!hasRowAlready) {
     rows.push(payload);
     writeJson(localKeys.babyFeeds, rows);
+  }
+
+  if (!state.hasSupabase || !state.supabase) {
     invalidateRowsCache(tableNames.babyFeeds);
     state.babyFeedSyncMode = "local";
     return { mode: "local" };
@@ -649,9 +670,6 @@ async function insertBabyFeedRow(payload) {
   const { error } = await state.supabase.from(tableNames.babyFeeds).insert(payload);
   invalidateRowsCache(tableNames.babyFeeds);
   if (error) {
-    const rows = readJson(localKeys.babyFeeds, []);
-    rows.push(payload);
-    writeJson(localKeys.babyFeeds, rows);
     state.babyFeedSyncMode = "local";
     return { mode: "local", error };
   }
